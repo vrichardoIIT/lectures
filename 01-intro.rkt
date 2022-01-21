@@ -25,7 +25,6 @@
 - Heap-based storage with garbage collection
 -----------------------------------------------------------------------------|#
 
-
 ;; a bit of Racket to whet your appetite
 (define (quicksort < l)
   (match l
@@ -55,7 +54,7 @@ A sexp is either an *atom* or a *list*.
   - a String
     - e.g., "hello", "foo\nbar"
 
-  - a Symbol, written as an identifier made of any chars except ()[]{}|",'`;#\
+  - a Symbol, written as an identifier made of any chars except #()[]{}|\'"`,;
     - e.g., foo, hot-enough?, <=, list->set, call/cc, bang!!!
 
 - A *list* is a sequence of sexps (recursion!) separated by spaces, 
@@ -87,19 +86,19 @@ A sexp is either an *atom* or a *list*.
 
   - If an identifier corresponds to a *variable*, its value is returned
 
-  - Identifiers may also correspond to *special forms* (more on this later)
-
-- For lists, if the first element evaluates to a function, that function is 
-  applied to the rest of the values in the list (a la prefix form)
+- For lists, if the first element evaluates to a *function*, that function is
+  applied to the rest of the values in the list
 
   - e.g., `(f x y z)` applies function `f` to the values `x`, `y`, and `z`
 
-  - Arguments are passed *by value*; i.e., the argument sexps are evaluated,  
-    then their results are passed to the function (this is different for 
-    special forms!)
+  - Arguments are passed *by value*; i.e., the argument sexps are evaluated 
+    first, then their results are passed to the function
 
-    - What types of semantic can we not implement with functions?
+- The first element of a list may also be a *special form*, which is applied 
+  like a function to its arguments, but with special semantics
 -----------------------------------------------------------------------------|#
+
+;; try evaluating these sexps:
 
 1
 
@@ -107,7 +106,11 @@ A sexp is either an *atom* or a *list*.
 
 #t
 
+#\m
+
 +
+
+abs
 
 (+ 300 40)
 
@@ -119,30 +122,70 @@ A sexp is either an *atom* or a *list*.
 
 (println "hello world")
 
-#; x
+(if (< (random 10) 5) ; why can't `if` be a function?
+  (println "heads")
+  (println "tails"))
 
-#; (+ x y)
 
-#; (foo 1 2 3)
+#|-----------------------------------------------------------------------------
+;; Quoting
+
+The special form `quote` can be used to prevent the normal evaluation of a 
+sexp, and instead just return the value of the sexp.
+
+`quote` also has the short form `'` (i.e., syntactic sugar):
+
+  (quote x) == 'x
+  (quote (1 2 3)) == '(1 2 3)
+
+There is also another special form, `quasiquote`, which can be used with 
+`unquote` to selectively build sexps with some evaluated sub-sexps.
+
+  (quasiquote x) == `x
+  (quasiquote (x (unquote y) z)) == `(x ,y z)
+
+Quasiquoting is particularly useful for metaprogramming!
+-----------------------------------------------------------------------------|#
+
+;; try:
+
+(quote x)
+
+'x
+
+'(foo x y z)
+
+'(this is ([x y z])
+  (not semantically meaningful Racket code)
+  but it [is *syntactically* legal!])
+
+`(x y z)
+
+`(x ,(+ 1 2) y z)
 
 
 #|-----------------------------------------------------------------------------
 ;; Variables
 
-We define global variables with `define`:
+Define global variables with `define` and local variables with `let` and `let*`
+-----------------------------------------------------------------------------|#
 
-  (define course-id "CS 440")
+(define course-id "CS 440")
 
-We define local variables with `let` and `let*`:
+(define w (expt 2 40))
 
-  (let ([x 1] 
-        [y 2]) 
-    (+ x y))
+(let ([x 1] 
+      [y 2]) 
+  (+ w x y))
 
-  (let* ([x 10]
-         [y (* x 2)]) ; allows prior bindings to be accessed
-    (+ x y))
-|#
+;; find roots of x^2 + 3x - 4 = (x - 1)(x + 4) = 0
+(let* ([a  1]
+       [b  3]
+       [c -4]
+       [disc (- (* b b) (* 4 a c))]
+       [sqr-disc (sqrt disc)])
+  (values (/ (- b sqr-disc) (* 2 a))
+          (/ (+ b sqr-disc) (* 2 a))))
 
 
 #|-----------------------------------------------------------------------------
@@ -160,28 +203,49 @@ The functions `car` and `cdr` access the first and second slots of a pair.
 
 A list is either:
 
-- empty (`null`), or
-- a pair where the first slot refers to an element 
-  and the second slot refers to a lists a list
-|#
+- empty (expressed as `null`, `empty`, or `'()`), or
+- a pair whose `car` refers to an element and whose `cdr` to a list
 
-;; build a few lists manually!
+Useful functions:
+  - `cons`: constructs a pair from an element and a list
+  - `car`: returns the first element of a pair
+  - `cdr`: returns the rest of a pair
+  - `list`: constructs a list from a sequence of elements
+  - `first`: returns the first element of a list
+  - `rest`: returns the rest of a list  
+  - `list?`: tests whether an object is a list
+  - `empty:`: tests whether a list is empty
+-----------------------------------------------------------------------------|#
+
+;; pairs aren't necessarily lists
+
+(define pair1 (cons 1 2))
+
+(define pair2 (cons 3 pair1))
+
+(define pair3 '(1 . 2)) ; `.` indicates that the next value is the cdr of a pair
+
+(define pair4 '(3 1 . 2)) ; = (cons 3 (cons 1 2))
 
 
-#|-----------------------------------------------------------------------------
-;; Quoting
+;; build and take apart some lists
 
-The special form `quote` can be used to prevent the normal evaluation of a 
-sexp, and instead just return the value of the sexp.
+(define lst1 '())
 
-`quote` also has the short form `'`:
+(define lst2 (cons 1 '()))
 
-  (quote x) == 'x
-  (quote (1 2 3)) == '(1 2 3)
+(define lst3 (cons 1 (cons 2 (cons 3 '()))))
 
-Quote (and related forms) make it easy to write programs that manipulate and 
-write other programs!
+(define lst4 (cons 1 (cons "hello" (cons #t '()))))
 
-This is possible because of the *program-data equivalence* of the Racket 
-language.
-|#
+(define lst5 (list 1 "hello" #t))
+
+(define lst6 '(1 "hello" #t))
+
+(define lst7 '(1 "hello" #t . ()))
+
+#; (define lst8 (list 1 (2 3) ((4 5) (6 7)))) ; what's wrong with this?
+
+(define lst9 '(1 (2 3) ((4 5) (6 7))))
+
+(define lst10 '(a (b (c d) (e f)) g))
