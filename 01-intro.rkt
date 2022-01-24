@@ -184,8 +184,8 @@ Define global variables with `define` and local variables with `let` and `let*`
        [c -4]
        [disc (- (* b b) (* 4 a c))]
        [sqr-disc (sqrt disc)])
-  (values (/ (- b sqr-disc) (* 2 a))
-          (/ (+ b sqr-disc) (* 2 a))))
+  (values (/ (+ (- b) sqr-disc) (* 2 a))
+          (/ (- (- b) sqr-disc) (* 2 a))))
 
 
 #|-----------------------------------------------------------------------------
@@ -208,13 +208,13 @@ A list is either:
 
 Useful functions:
   - `cons`: constructs a pair from an element and a list
-  - `car`: returns the first element of a pair
-  - `cdr`: returns the rest of a pair
+  - `car`:  returns the first element of a pair
+  - `cdr`:  returns the rest of a pair
   - `list`: constructs a list from a sequence of elements
-  - `first`: returns the first element of a list
-  - `rest`: returns the rest of a list  
+  - `first`: returns the first element of a non-empty list
+  - `rest`:  returns the rest of a non-empty list  
   - `list?`: tests whether an object is a list
-  - `empty:`: tests whether a list is empty
+  - `empty?:`: tests whether a list is empty
 -----------------------------------------------------------------------------|#
 
 ;; pairs aren't necessarily lists
