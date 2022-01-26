@@ -1,5 +1,6 @@
 #lang racket
 
+(require racket/trace) ; for dynamic function call traces
 (require 2htdp/image) ; for a bit of fun with pictures
 
 #|-----------------------------------------------------------------------------
@@ -14,19 +15,21 @@
 #|-----------------------------------------------------------------------------
 ;; Some more special forms
 
+- `begin`: sequences multiple sexps; evaluates to the result of the last
 - `if`: if-then-else
 - `when`: if-then
 - `cond`: multi-way conditional
 -----------------------------------------------------------------------------|#
 
-#; (if bool-expr then-expr else-expr)
+#; (begin body ...)
 
-#; (when bool-expr then-expr ...)
+#; (if test-expr then-expr else-expr)
 
-#; (cond [bool-expr1 result1]
-         [bool-expr2 result2]
-         [bool-expr3 result3]
-         [else result4])
+#; (when test-expr body ...)
+
+#; (cond [expr1 body ...]
+         [expr2 body ...]
+         [else body ...])
 
 
 #|-----------------------------------------------------------------------------
@@ -57,17 +60,12 @@
 ;; Higher-order functions (HOFs)
 
 HOFs either take a function as an argument or return a function.
------------------------------------------------------------------------------|#
 
-
-
-#|-----------------------------------------------------------------------------
-;; Even more special forms
-
+Some useful built-in HOFs and related functions:
+- `eval`: evaluates a sexp
 - `apply`: apply a function to a list of arguments
-- `compose`: returns a function that composes the given functions
 - `curry`: returns a version of a function that can be partially applied
-- `eval`: evaluate a sexp
+- `compose`: returns a function that is the composition of two other functions
 -----------------------------------------------------------------------------|#
 
 
