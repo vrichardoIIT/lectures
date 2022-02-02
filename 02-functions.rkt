@@ -1,7 +1,7 @@
 #lang racket
 
-(require racket/trace) ; for dynamic function call traces
-(require 2htdp/image) ; for a bit of fun with pictures
+(require racket/trace ; for dynamic function call traces
+         2htdp/image) ; for a bit of fun with pictures
 
 (define *car-wheel* (circle 20 "solid" "grey"))
 
@@ -59,6 +59,7 @@
 - `if`: if-then-else
 - `when`: if-then
 - `cond`: multi-way conditional
+- `match`: pattern match
 -----------------------------------------------------------------------------|#
 
 #; (begin body ...)
@@ -70,6 +71,12 @@
 #; (cond [expr1 body ...]
          [expr2 body ...]
          [else body ...])
+
+#; (match val
+     [pattern1 body ...]
+     [pattern2 body ...]
+     [pattern3 body ...])
+     
 
 
 #|-----------------------------------------------------------------------------
