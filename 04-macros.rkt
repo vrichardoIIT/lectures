@@ -90,7 +90,13 @@
       (rec (+ var 1)))))
 
 
-;; anaphoric (non-repetitive) if
+;; "Anaphoric if": a convenient programmer-defined control structure
+
+#; (aif (compute-test-result ...)  ; may be a lengthy computation
+        (use it)     ; if true; `it` refers to the result of the computation
+        (else-case)  ; if false
+
+        
 (define-syntax-rule (aif test exp1 exp2)
   (let ([it test])
     (if it
@@ -104,4 +110,3 @@
                       (if it
                           ,(third sexp)
                           ,(fourth sexp))))))
-

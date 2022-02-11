@@ -57,7 +57,7 @@ A sexp is either an *atom* or a *list*.
   - a Symbol, written as an identifier made of any chars except #()[]{}|\'"`,;
     - e.g., foo, hot-enough?, <=, list->set, call/cc, bang!!!
 
-- A *list* is a sequence of sexps (recursion!) separated by spaces, 
+- A *list* is a sequence of sexps (recursive def!) separated by spaces, 
   enclosed by parentheses
 
   - [] and {} can also be used as delimiters
@@ -184,7 +184,7 @@ Define global variables with `define` and local variables with `let` and `let*`
        [c -4]
        [disc (- (* b b) (* 4 a c))]
        [sqr-disc (sqrt disc)])
-  (values (/ (+ (- b) sqr-disc) (* 2 a))
+  (values (/ (+ (- b) sqr-disc) (* 2 a))  ; `values` may return multiple values
           (/ (- (- b) sqr-disc) (* 2 a))))
 
 

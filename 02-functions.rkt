@@ -1,21 +1,6 @@
 #lang racket
 
-(require racket/trace ; for dynamic function call traces
-         2htdp/image) ; for a bit of fun with pictures
-
-(define *car-wheel* (circle 20 "solid" "grey"))
-
-(define *car-body* (beside/align "bottom"
-                    (square 40 "solid" "teal")
-                    (square 70 "solid" "teal")
-                    (square 40 "solid" "teal")))
-
-(define *car* (let ([wheels (beside *car-wheel*
-                                    (rectangle 40 0 "solid" "white")
-                                    *car-wheel*)])
-                (overlay/offset wheels
-                                0 -30
-                                *car-body*)))
+(require racket/trace) ; for dynamic function call traces
 
 
 #|-----------------------------------------------------------------------------
@@ -59,8 +44,9 @@
 - `if`: if-then-else
 - `when`: if-then
 - `cond`: multi-way conditional
+- `case`: dispatch
 - `match`: pattern match
-- `set!': variable assignment
+- `set!': variable assignment (mutation)
 -----------------------------------------------------------------------------|#
 
 #; (begin body ...)
@@ -72,6 +58,11 @@
 #; (cond [expr1 body ...]
          [expr2 body ...]
          [else body ...])
+
+#; (case val
+     [(val ...) body ...]
+     [(val ...) body ...]
+     [else body ...])
 
 #; (match val
      [pattern1 body ...]
