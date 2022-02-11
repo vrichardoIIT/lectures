@@ -1,21 +1,6 @@
 #lang racket
 
-(require racket/trace
-         2htdp/image)
-
-(define *car-wheel* (circle 20 "solid" "grey"))
-
-(define *car-body* (beside/align "bottom"
-                    (square 40 "solid" "teal")
-                    (square 70 "solid" "teal")
-                    (square 40 "solid" "teal")))
-
-(define *car* (let ([wheels (beside *car-wheel*
-                                    (rectangle 40 0 "solid" "white")
-                                    *car-wheel*)])
-                (overlay/offset wheels
-                                0 -30
-                                *car-body*)))
+(require racket/trace)
 
 
 #|-----------------------------------------------------------------------------
@@ -68,13 +53,13 @@ Some useful built-in HOFs and related functions:
 #; (filter even? (range 10))
 #; (filter (curry < 5) (range 10))
 
-#; (foldl + 0 (range 10))
-#; (foldl - 0 (range 10))
-#; (foldl / 1 '(2 3 4))
-
 #; (foldr + 0 (range 10))
 #; (foldl - 0 (range 10))
 #; (foldr / 1 '(2 3 4))
+
+#; (foldl + 0 (range 10))
+#; (foldl - 0 (range 10))
+#; (foldl / 1 '(2 3 4))
 
 
 #|-----------------------------------------------------------------------------
@@ -82,5 +67,5 @@ Some useful built-in HOFs and related functions:
 
 - A free variable is bound to a value *in the environment where it is defined*, 
   regardless of when it is used
-- This applies to 
+- This leads to one of the most important ideas we'll see: the *closure*
 -----------------------------------------------------------------------------|#
