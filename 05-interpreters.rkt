@@ -61,16 +61,17 @@ We just need to decorate it now :)
 
 ;;; Define some types for decorating our syntax tree
 
-;; base expression type
-(struct exp () #:transparent)
+;; integer value
+(struct int-exp (val) #:transparent)
 
-;; for arithmetic expressions
-(struct int-exp exp (val) #:transparent)
-(struct arith-exp exp (op lhs rhs) #:transparent)
+;; arithmetic expression
+(struct arith-exp (op lhs rhs) #:transparent)
 
-;; for variables
-(struct let-exp exp (ids vals body) #:transparent)
-(struct var-exp exp (id) #:transparent)
+;; variable
+(struct var-exp (id) #:transparent)
+
+;; let expression
+(struct let-exp (ids vals body) #:transparent)
 
   
 ;; Parser v1
@@ -106,7 +107,7 @@ We just need to decorate it now :)
 (define (parse sexp)
   (match sexp
     ;; for interpreter v1: arithmetic
-    [(? number?)
+    [(? integer?)
      (int-exp sexp)]
     [(list '+ lhs rhs) (arith-exp "+" (parse lhs) (parse rhs))]
     [(list '* lhs rhs) (arith-exp "*" (parse lhs) (parse rhs))]
@@ -115,17 +116,9 @@ We just need to decorate it now :)
 
     ;; for interpreter v2: variables
     [(? symbol?)
-     (var-exp sexp)]
-    
+     (var-exp sexp)]    
     [(list 'let (list (list id val) ...) body)
      (let-exp (map parse id) (map parse val) (parse body))]
-
-    ;; for interpreter v3: functions
-    [(list 'lambda (list vars ...) body)
-     `(,vars ,body)]
-    
-    [(list f args ...)
-     `(,f ,@args)]
 
     ;; basic error handling
     [_ #f #; (error (format "Can't parse: ~a" sexp))]))
@@ -138,17 +131,19 @@ Syntax tree => Evaluation
 -----------------------------------------------------------------------------|#
 
 ;; Interpreter v1: Integers and Arithmetic
-(define (eval expr)
-  (match expr
-    [(int-exp val) val]
-    [(arith-exp "+" lhs rhs)
-     (+ (eval lhs) (eval rhs))]
-    [(arith-exp "*" lhs rhs)
-     (* (eval lhs) (eval rhs))]
+#; (define (eval expr)
+     (match expr
+       ;; ints evaluate to themselves
+       [(int-exp val) val]
 
-    ;; basic error handling
-    [(not (? exp?)) (error "Encountered non-expression!")]
-    [_ (error (format "Can't evaluate: ~a" expr))]))
+       ;; arithmetic operations
+       [(arith-exp "+" lhs rhs)
+        (+ (eval lhs) (eval rhs))]
+       [(arith-exp "*" lhs rhs)
+        (* (eval lhs) (eval rhs))]
+
+       ;; basic error handling
+       [_ (error (format "Can't evaluate: ~a" expr))]))
 
 
 ;; Let's define a REPL!
@@ -160,10 +155,11 @@ Syntax tree => Evaluation
 
 
 ;; Interpreter v2: Adding variables
-#; (define (eval expr)
+(define (eval expr)
   (let eval-env ([expr expr]
                  [env '()])
     (match expr
+      ;; arithmetic
       [(int-exp val) val]
       [(arith-exp "+" lhs rhs)
        (+ (eval-env lhs env) (eval-env rhs env))]
@@ -171,25 +167,24 @@ Syntax tree => Evaluation
        (* (eval-env lhs env) (eval-env rhs env))]
 
       ;; variable binding
-      [(var-exp id)
+      #; [(var-exp id)
           (cdr (assoc id env))]
 
       ;; variable binding with error handling
-      #; [(var-exp id)
-          (let ([pair (assoc id env)])
-            (if pair (cdr pair) (error (format "~a not bound!" id))))]
+      [(var-exp id)
+       (let ([pair (assoc id env)])
+         (if pair (cdr pair) (error (format "~a not bound!" id))))]
 
       ;; let expression with a single variable
-      [(let-exp (list (var-exp id)) (list val) body)
-       (eval-env body (cons (cons id (eval-env val env)) env))]
+      #; [(let-exp (list (var-exp id)) (list val) body)
+          (eval-env body (cons (cons id (eval-env val env)) env))]
 
       ;; let expression with multiple variables
-      #; [(let-exp (list (var-exp id) ...) (list val ...) body)
+      [(let-exp (list (var-exp id) ...) (list val ...) body)
        (let ([vars (map cons id
                         (map (lambda (v) (eval-env v env)) val))])
          (eval-env body (append vars env)))]
-
+      
       ;; basic error handling
-      [(not (? exp?)) (error "Encountered non-expression!")]
       [_ (error (format "Can't evaluate: ~a" expr))])))
 
