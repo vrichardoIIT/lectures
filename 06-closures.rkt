@@ -58,10 +58,6 @@
 ;; Functions
 -----------------------------------------------------------------------------|#
 
-;; function value
-#; (struct fun-val (id body) #:transparent)
-
-
 ;; Interpreter
 #; (define (eval expr)
      (let eval-env ([expr expr]
@@ -89,11 +85,11 @@
 
          ;; lambda expression
          [(lambda-exp id body)
-          (fun-val id body)]
+          (lambda-exp id body)] ; why don't we evaluate the body?
       
          ;; function application
          [(app-exp f arg)
-          (match-let ([(fun-val id body) (eval-env f env)]
+          (match-let ([(lambda-exp id body) (eval-env f env)]
                       [arg-val (eval-env arg env)])
             (eval-env body (cons (cons id arg-val) env)))]
 
@@ -161,13 +157,13 @@
 
       ;; lambda expression
       [(lambda-exp id body)
-       (fun-val id body env)]
+       (fun-val id body env)] ; store current env in closure
       
       ;; function application (in lexical scope)
       [(app-exp f arg)
        (match-let ([(fun-val id body clenv) (eval-env f env)]
                    [arg-val (eval-env arg env)])
-         (eval-env body (cons (cons id arg-val) clenv)))]
+         (eval-env body (cons (cons id arg-val) clenv)))] ; eval in closure
 
       ;; basic error handling
       [_ (error (format "Can't evaluate: ~a" expr))])))
