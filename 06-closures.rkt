@@ -1,8 +1,47 @@
 #lang racket
 
 #|-----------------------------------------------------------------------------
-;; Adding functions & closures to our interpreter
+;; Adding Functions & Closures
+
+We will add functions (as lambda expressions) and function applications to our
+language. Our functions will have exactly one formal parameter each.
+
+E.g.,
+
+- lambda definition: `(lambda (x) (+ x 1))`
+
+- function application: `((lambda (x) (+ x 1)) 10)`
+
+Though our language will not support named functions a la Racket's `define`,
+we can use `let` to bind identifiers to lambdas. E.g.,
+
+  (let ([f (lambda (x) (+ x 1))])
+    (f 10))
 -----------------------------------------------------------------------------|#
+
+;; Some test cases
+(define p1 '(lambda (x) (+ x 1)))
+
+(define p2 '((lambda (x) (+ x 1)) 10))
+
+(define p3 ' (let ([f (lambda (x) (+ x 1))])
+               (f 10)))
+
+(define p4 '(let ([x 10])
+              (lambda (y) (+ x y))))
+
+(define p5 '(let ([x 10])
+              ((lambda (y) (+ x y)) 20)))
+
+(define p6 '(let ([f (let ([x 10])
+                       (lambda (y) (+ x y)))])
+              (let ([x 20])
+                (f x))))
+
+(define p7 '(let ([f (let ([x 10])
+                       (lambda (y) (+ x y)))])
+              (f 20)))
+
 
 ;; integer value
 (struct int-exp (val) #:transparent)
@@ -51,21 +90,17 @@
      (app-exp (parse f) (parse arg))]
 
     ;; basic error handling
-    [_ #f #; (error (format "Can't parse: ~a" sexp))]))
+    [_ (error (format "Can't parse: ~a" sexp))]))
 
 
-#|-----------------------------------------------------------------------------
-;; Functions
------------------------------------------------------------------------------|#
-
-;; Interpreter
+;; Interpreter (functions with dynamic scoping)
 #; (define (eval expr)
      (let eval-env ([expr expr]
                     [env '()])
        (match expr
          ;; int literals
          [(int-exp val) val]
-
+         
          ;; arithmetic expressions
          [(arith-exp "+" lhs rhs)
           (+ (eval-env lhs env) (eval-env rhs env))]
@@ -87,7 +122,7 @@
          [(lambda-exp id body)
           (lambda-exp id body)] ; why don't we evaluate the body?
       
-         ;; function application
+         ;; function application (in dynamic scope)
          [(app-exp f arg)
           (match-let ([(lambda-exp id body) (eval-env f env)]
                       [arg-val (eval-env arg env)])
@@ -105,32 +140,23 @@
       (repl))))
 
 
-;; Some test cases
-(define p1 '(lambda (x) (+ x 1)))
-
-(define p2 '((lambda (x) (+ x 1)) 10))
-
-(define p3 '(let ([x 10])
-              (lambda (y) (+ x y))))
-
-(define p4 '(let ([x 10])
-              ((lambda (y) (+ x y)) 20)))
-
-(define p5 '(let ([f (let ([x 10])
-                       (lambda (y) (+ x y)))])
-              (let ([x 20])
-                (f x))))
-
-
 #|-----------------------------------------------------------------------------
 ;; Closures
+
+Idea: free identifiers in a function are bound *at the time of definition*.
+This is called "lexical scoping". It requires that we attach a copy of the
+environment (including all relevant bindings) to the function value at the time
+the creating lambda expression is evaluated.
+
+A function therefore "closes over" bindings in its environment. We call such a
+function a "closure".
 -----------------------------------------------------------------------------|#
 
 ;; function value + closure
 (struct fun-val (id body env) #:transparent)
 
 
-;; Interpreter
+;; Interpreter (functions with lexical scoping / closures)
 (define (eval expr)
   (let eval-env ([expr expr]
                  [env '()])
