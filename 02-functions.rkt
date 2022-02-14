@@ -67,6 +67,30 @@
       (println (format "Hello, ~a" name))))
 
 
+;; digression: equality testing
+(list
+ (list
+  ;; `=` for numbers
+  (= 2 2)
+  (= 2 2.0)
+  (= 2 2.01)
+  (= 2 2.0000000000000000001)
+  (= 2 8/4))
+
+ (list
+  ;; `eq?` for pointer comparison
+  (eq? 'a 'a)
+  (eq? "hello world" "hello world")
+  (eq? '(a b c) '(a b c))
+  (let ([lst '(a b c)])
+    (eq? lst lst)))
+
+ (list
+  ;; `equal?` for value comparison
+  (equal? "hello world" "hello world")
+  (equal? '(a b c) '(a b c))))
+ 
+
 (define (say-hi-2 name)
   (if (equal? (string-ref name 0) #\J)
       (begin (println "Me Tarzan!")
