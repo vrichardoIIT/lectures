@@ -121,7 +121,7 @@ We just need to decorate it now :)
      (let-exp (map parse id) (map parse val) (parse body))]
 
     ;; basic error handling
-    [_ #f #; (error (format "Can't parse: ~a" sexp))]))
+    [_ #f (error (format "Can't parse: ~a" sexp))]))
 
 
 #|-----------------------------------------------------------------------------
