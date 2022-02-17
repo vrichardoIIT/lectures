@@ -42,7 +42,7 @@ e.g., support for lambda and function application with > 1 params/args
 (struct lambda-exp (id body) #:transparent)
 
 ;; function application
-(struct app-exp (fn args) #:transparent)
+(struct app-exp (fn arg) #:transparent)
 
 
 ;; Parser
@@ -56,7 +56,7 @@ e.g., support for lambda and function application with > 1 params/args
     [(list (and op (or '+ '*)) lhs rhs)
      (arith-exp (symbol->string op) (parse lhs) (parse rhs))]
     
-    ;; identifiers (variables)
+    ;; identifier (variable)
     [(? symbol?)
      (var-exp sexp)]
 
@@ -64,7 +64,7 @@ e.g., support for lambda and function application with > 1 params/args
     [(list 'let (list (list id val) ...) body)
      (let-exp (map parse id) (map parse val) (parse body))]
     
-    ;; lambda expressions -- modified for > 1 params
+    ;; lambda expression -- modified for > 1 params
     [(list 'lambda (list ids ...) body)
      (lambda-exp ids (parse body))]
 
@@ -102,15 +102,15 @@ e.g., support for lambda and function application with > 1 params/args
 (struct fun-val (id body env) #:transparent)
 
 
-;; Interpreter (functions with lexical scoping / closures)
+;; Interpreter
 (define (eval expr)
   (let eval-env ([expr expr]
                  [env '()])
     (match expr
-      ;; int literals
+      ;; int literal
       [(int-exp val) val]
 
-      ;; arithmetic expressions
+      ;; arithmetic expression
       [(arith-exp "+" lhs rhs)
        (+ (eval-env lhs env) (eval-env rhs env))]
       [(arith-exp "*" lhs rhs)
@@ -121,7 +121,7 @@ e.g., support for lambda and function application with > 1 params/args
        (let ([pair (assoc id env)])
          (if pair (cdr pair) (error (format "~a not bound!" id))))]
 
-      ;; let expression with multiple variables
+      ;; let expression
       [(let-exp (list (var-exp id) ...) (list val ...) body)
        (let ([vars (map cons id
                         (map (lambda (v) (eval-env v env)) val))])
@@ -129,13 +129,13 @@ e.g., support for lambda and function application with > 1 params/args
 
       ;; lambda expression
       [(lambda-exp id body)
-       (fun-val id body env)] ; store current env in closure
+       (fun-val id body env)]
       
-      ;; function application (in lexical scope)
+      ;; function application
       [(app-exp f arg)
        (match-let ([(fun-val id body clenv) (eval-env f env)]
                    [arg-val (eval-env arg env)])
-         (eval-env body (cons (cons id arg-val) clenv)))] ; eval in closure
+         (eval-env body (cons (cons id arg-val) clenv)))]
 
       ;; basic error handling
       [_ (error (format "Can't evaluate: ~a" expr))])))
