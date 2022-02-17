@@ -1,6 +1,5 @@
 #lang racket
 
-
 #|-----------------------------------------------------------------------------
 ;; Function definitions
 
@@ -16,7 +15,7 @@
              (println z)
              (* x (+ y z))))
 
-(define (f3 x) (+ x 1))
+(define (f3 x) (add1 x))
 
 (define (f4 x y z)
   (println x)
@@ -50,6 +49,17 @@
   (length rest))
 
 
+;; lambda expressions also support rest arguments
+(define f7
+  (lambda args ; `args` is a list of all the arguments
+    (length args)))
+
+(define f8
+  (lambda (x . rest)
+    (println x)
+    (println rest)))
+
+
 #|-----------------------------------------------------------------------------
 ;; Some more special forms
 
@@ -59,6 +69,7 @@
 - `cond`: multi-way conditional
 - `case`: dispatch
 - `match`: pattern match
+- `set!`: mutation!
 -----------------------------------------------------------------------------|#
 
 (define (say-hi-1 name)
@@ -132,3 +143,11 @@
     [(list _ _ _ "Jane") (println "Hi, Jane in 4th place")]
     [(or 'Jane '(Jane)) (format "Hi, Jane in hiding")]
     [_ (println "Stranger, Danger!")]))
+
+
+(define (say-hi-7 name)
+  (let ([greetings '("Hello" "Hola" "你好")]
+        [index 0])
+    (lambda ()
+      (println (format "~a, ~a" (list-ref greetings index) name))
+      (set! index (remainder (add1 index) (length greetings))))))
