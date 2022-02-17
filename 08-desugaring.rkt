@@ -1,10 +1,41 @@
 #lang racket
 
-
 #|-----------------------------------------------------------------------------
-;; Desugaring
+;; Desugaring (Syntax Transformation)
 
+Our language now includes arithmetic expressions, variables, and closures.
+We can (and will!) grow the language, but how should we go about building
+support for new language constructs?
 
+We could modify the interpreter to recognize and implement each new construct,
+but this might not scale well. Our interpreter could grow complex and hard to
+maintain, and our language might become bloated and messy.
+
+Alternatively, we could specify a small "core" language which will provide a
+minimal set of features needed to implement all other language constructs.
+
+The parser would accept programs written in the full language (aka the "input
+language") and create a syntax tree, as before. Before sending the tree to the
+interpreter, however, we would apply one or more "desugaring" passes to the
+syntax tree to transform all its nodes into those of the core language.
+
+The final desugared form of the syntax tree -- now serving as a flexible
+internal representation (IR) of our program -- can be directly evaluated.
+
+Here is the process described above:
+
+    Program (input language) => Parser => Syntax Tree / IR (input language)
+
+    IR (input language) => Desugaring Pass(es) ... => IR (core language)
+
+    IR (core language) => Interpreter / Eval
+
+---
+
+As an example of desugaring, we will add support for lambdas and function
+applications that accept > 1 params/args. This will *not* require any
+modifications to our interpreter, as we can rewrite such expressions using
+the existing core language.
 
 e.g., support for lambda and function application with > 1 params/args
 
@@ -14,8 +45,8 @@ e.g., support for lambda and function application with > 1 params/args
                                                         ...
                                                           body)))
 
-  if we ensure that all function applications of the form (f x y z ...)
-  are rewritten as ((((f x) y) z) ...)
+   if we ensure that all function applications of the form (f x y z ...)
+   are rewritten as ((((f x) y) z) ...)
 -----------------------------------------------------------------------------|#
 
 ;; Some test cases
