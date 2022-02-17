@@ -12,8 +12,8 @@
   #:transparent)        ; when printing a widget, show its attributes
 
 ;; we get the following functions for free:
-;; - `widget`
-;; - `widget?`
+;; - `widget`: constructor
+;; - `widget?`: predicate that returns #t for widget values
 ;; - `widget-name`: retrieve `name` attribute
 ;; - `widget-purpose`: retrieve `purpose` attribute
 ;; - `widget-price`: retrieve `price` attribute
@@ -26,6 +26,36 @@
 (struct doohickey widget (special-power) #:transparent)
 
 (define d1 (doohickey "thingamajig" "thinging" 199.99 "time travel"))
+
+
+#|-----------------------------------------------------------------------------
+;; Our language
+
+We're going to start with a very simple language and slowly add to it. Our
+first iteration will support integer literals, the binary arithmetic operations
+ +` and `*`, and `let`-bound variables. The syntax will mirror Racket's. 
+-----------------------------------------------------------------------------|#
+
+;; Some test cases
+(define p1 '(+ 1 2))
+
+(define p2 '(* 2 (+ 3 4)))
+
+(define p3 '(+ x 1))
+
+(define p4 '(* w (+ x y)))
+
+(define p5 '(let ([x 10])
+              (+ x 1)))
+
+(define p6 '(let ([x 10]
+                  [y 20])
+              (+ x y)))
+
+(define p7 '(let ([x 10])
+              (let ([y 20])
+                (+ x (let ([w 30])
+                       (* w y))))))
 
 
 #|-----------------------------------------------------------------------------
@@ -59,7 +89,7 @@ Because Racket's `read` does so much for us, we already have a syntax tree!
 We just need to decorate it now :)
 -----------------------------------------------------------------------------|#
 
-;;; Define some types for decorating our syntax tree
+;;; Some types for decorating our syntax tree
 
 ;; integer value
 (struct int-exp (val) #:transparent)
@@ -121,7 +151,7 @@ We just need to decorate it now :)
      (let-exp (map parse id) (map parse val) (parse body))]
 
     ;; basic error handling
-    [_ #f (error (format "Can't parse: ~a" sexp))]))
+    [_ (error (format "Can't parse: ~a" sexp))]))
 
 
 #|-----------------------------------------------------------------------------
@@ -187,4 +217,3 @@ Syntax tree => Evaluation
       
       ;; basic error handling
       [_ (error (format "Can't evaluate: ~a" expr))])))
-

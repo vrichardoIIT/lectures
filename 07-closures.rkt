@@ -59,7 +59,7 @@ we can use `let` to bind identifiers to lambdas. E.g.,
 (struct lambda-exp (id body) #:transparent)
 
 ;; function application
-(struct app-exp (fn args) #:transparent)
+(struct app-exp (fn arg) #:transparent)
 
 
 ;; Parser
