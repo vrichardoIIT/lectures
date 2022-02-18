@@ -27,18 +27,26 @@ we can use `let` to bind identifiers to lambdas. E.g.,
 (define p3 ' (let ([f (lambda (x) (+ x 1))])
                (f 10)))
 
-(define p4 '(let ([x 10])
+;; p4-p5 for testing strict/lazy eval
+(define p4 ' (let ([x (+ 1 2)])
+               20))
+
+(define p5 ' (let ([f (lambda (x) 10)])
+               (f (+ 1 2))))
+
+;; p6-p9 for testing closures
+(define p6 '(let ([x 10])
               (lambda (y) (+ x y))))
 
-(define p5 '(let ([x 10])
+(define p7 '(let ([x 10])
               ((lambda (y) (+ x y)) 20)))
 
-(define p6 '(let ([f (let ([x 10])
+(define p8 '(let ([f (let ([x 10])
                        (lambda (y) (+ x y)))])
               (let ([x 20])
                 (f x))))
 
-(define p7 '(let ([f (let ([x 10])
+(define p9 '(let ([f (let ([x 10])
                        (lambda (y) (+ x y)))])
               (f 20)))
 
@@ -93,43 +101,91 @@ we can use `let` to bind identifiers to lambdas. E.g.,
     [_ (error (format "Can't parse: ~a" sexp))]))
 
 
-;; Interpreter (functions with dynamic scoping)
-#; (define (eval expr)
-     (let eval-env ([expr expr]
-                    [env '()])
-       (match expr
-         ;; int literals
-         [(int-exp val) val]
+;; Interpreter (functions with dynamic scoping & strict evaluation)
+(define (eval-dyn-strict expr)
+  (let eval-env ([expr expr]
+                 [env '()])
+    (match expr
+      ;; int literals
+      [(int-exp val) val]
          
-         ;; arithmetic expressions
-         [(arith-exp "+" lhs rhs)
-          (+ (eval-env lhs env) (eval-env rhs env))]
-         [(arith-exp "*" lhs rhs)
-          (* (eval-env lhs env) (eval-env rhs env))]         
+      ;; arithmetic expressions
+      [(arith-exp "+" lhs rhs)
+       (println (format "(+ ~a ~a)" lhs rhs))
+       (+ (eval-env lhs env) (eval-env rhs env))]
+      [(arith-exp "*" lhs rhs)
+       (println (format "(* ~a ~a)" lhs rhs))
+       (* (eval-env lhs env) (eval-env rhs env))]         
 
-         ;; variable binding
-         [(var-exp id)
-          (let ([pair (assoc id env)])
-            (if pair (cdr pair) (error (format "~a not bound!" id))))]
+      ;; variable binding
+      [(var-exp id)
+       (let ([pair (assoc id env)])
+         (if pair
+             (cdr pair)
+             (error (format "~a not bound!" id))))]
 
-         ;; let expression with multiple variables
-         [(let-exp (list (var-exp id) ...) (list val ...) body)
-          (let ([vars (map cons id
-                           (map (lambda (v) (eval-env v env)) val))])
-            (eval-env body (append vars env)))]
+      ;; let expression with multiple variables
+      [(let-exp (list (var-exp id) ...) (list val ...) body)
+       (let ([vars (map cons id
+                        (map (lambda (v) ; evaluate values at bind-time
+                               (eval-env v env))
+                             val))])
+         (eval-env body (append vars env)))]
 
-         ;; lambda expression
-         [(lambda-exp id body)
-          (lambda-exp id body)] ; why don't we evaluate the body?
+      ;; lambda expression
+      [(lambda-exp id body)
+       (lambda-exp id body)] ; why don't we evaluate the body?
       
-         ;; function application (in dynamic scope)
-         [(app-exp f arg)
-          (match-let ([(lambda-exp id body) (eval-env f env)]
-                      [arg-val (eval-env arg env)])
-            (eval-env body (cons (cons id arg-val) env)))]
+      ;; function application (in dynamic scope)
+      [(app-exp f arg)
+       (match-let ([(lambda-exp id body) (eval-env f env)]
+                   [arg-val (eval-env arg env)]) ; call-by-value
+         (eval-env body (cons (cons id arg-val) env)))]
 
-         ;; basic error handling
-         [_ (error (format "Can't evaluate: ~a" expr))])))
+      ;; basic error handling
+      [_ (error (format "Can't evaluate: ~a" expr))])))
+
+
+;; Interpreter (functions with dynamic scoping & lazy evaluation)
+(define (eval-dyn-lazy expr)
+  (let eval-env ([expr expr]
+                 [env '()])
+    (match expr
+      ;; int literals
+      [(int-exp val) val]
+         
+      ;; arithmetic expressions
+      [(arith-exp "+" lhs rhs)
+       (println (format "(+ ~a ~a)" lhs rhs))
+       (+ (eval-env lhs env) (eval-env rhs env))]
+      [(arith-exp "*" lhs rhs)
+       (println (format "(* ~a ~a)" lhs rhs))
+       (* (eval-env lhs env) (eval-env rhs env))]         
+
+      ;; variable binding
+      [(var-exp id)
+       (let ([pair (assoc id env)])
+         (if pair
+             ;; evaluate when derefenced (not very efficient!)
+             (eval-env (cdr pair) env)
+             (error (format "~a not bound!" id))))]
+
+      ;; let expression with multiple variables
+      [(let-exp (list (var-exp id) ...) (list val ...) body)
+       (let ([vars (map cons id val)]) ; no value evaluation!
+         (eval-env body (append vars env)))]
+
+      ;; lambda expression
+      [(lambda-exp id body)
+       (lambda-exp id body)]
+      
+      ;; function application (in dynamic scope)
+      [(app-exp f arg)
+       (match-let ([(lambda-exp id body) (eval-env f env)])
+         (eval-env body (cons (cons id arg) env)))] ; call-by-name
+
+      ;; basic error handling
+      [_ (error (format "Can't evaluate: ~a" expr))])))
 
 
 ;; REPL
@@ -156,7 +212,7 @@ function a "closure".
 (struct fun-val (id body env) #:transparent)
 
 
-;; Interpreter (functions with lexical scoping / closures)
+;; Interpreter (functions with lexical scoping / closures & strict evaluation)
 (define (eval expr)
   (let eval-env ([expr expr]
                  [env '()])
