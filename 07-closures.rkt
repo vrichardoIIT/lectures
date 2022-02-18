@@ -27,18 +27,26 @@ we can use `let` to bind identifiers to lambdas. E.g.,
 (define p3 ' (let ([f (lambda (x) (+ x 1))])
                (f 10)))
 
-(define p4 '(let ([x 10])
+;; p4-p5 for testing strict/lazy eval
+(define p4 ' (let ([x (+ 1 2)])
+               20))
+
+(define p5 ' (let ([f (lambda (x) 10)])
+               (f (+ 1 2))))
+
+;; p6-p9 for testing closures
+(define p6 '(let ([x 10])
               (lambda (y) (+ x y))))
 
-(define p5 '(let ([x 10])
+(define p7 '(let ([x 10])
               ((lambda (y) (+ x y)) 20)))
 
-(define p6 '(let ([f (let ([x 10])
+(define p8 '(let ([f (let ([x 10])
                        (lambda (y) (+ x y)))])
               (let ([x 20])
                 (f x))))
 
-(define p7 '(let ([f (let ([x 10])
+(define p9 '(let ([f (let ([x 10])
                        (lambda (y) (+ x y)))])
               (f 20)))
 
