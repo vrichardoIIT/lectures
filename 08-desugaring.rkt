@@ -2,20 +2,46 @@
 
 
 #|-----------------------------------------------------------------------------
-;; Desugaring
+;; Desugaring (Syntax Transformation)
 
+Our language now includes arithmetic expressions, variables, and closures.
+We can (and will!) grow the language, but how should we go about building
+support for new language constructs?
 
+Option 1: modify the interpreter to recognize and implement new constructs
 
-e.g., support for lambda and function application with > 1 params/args
+Option 2: restrict "core" language to a small set of features and ...?
 
-    (lambda (x y z ...)     can be written as     (lambda (x)
-      body)                                         (lambda (y)
-                                                      (lambda (z)
-                                                        ...
-                                                          body)))
+---
 
-  if we ensure that all function applications of the form (f x y z ...)
-  are rewritten as ((((f x) y) z) ...)
+Pros/Cons? (Discussion)
+
+---
+
+Parse / Desugar / Interpret workflow:
+
+    Program (input language) => Parser => Syntax Tree / IR (input language)
+
+    IR (input language) => Desugaring Pass(es) ... => IR (core language)
+
+    IR (core language) => Interpreter / Eval
+
+---
+
+As an example of desugaring, we will add support for lambdas and function
+applications that accept > 1 params/args. This will *not* require any
+modifications to our interpreter, as we can rewrite such expressions using
+the existing core language.
+
+e.g., how might we desugar a lambda of more than 1 parameter?
+
+    (lambda (x y z ...)
+      body)
+
+e.g., how might we desugar a function application with more than 1 argument?
+
+    (f x y z ...)
+
 -----------------------------------------------------------------------------|#
 
 ;; Some test cases
@@ -127,7 +153,7 @@ e.g., support for lambda and function application with > 1 params/args
 
 ;; REPL
 (define (repl)
-  (let ([stx (desugar (parse (read)))]) ; added desugaring step
+  (let ([stx (parse (read))])
     (when stx
       (println (eval stx))
       (repl))))
