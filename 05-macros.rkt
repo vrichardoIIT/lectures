@@ -51,6 +51,7 @@
 
 #; (expand/step #'(reversed 1 2 3 +))
 
+
 (define-syntax (my-if stx)
   (let ([sexp (syntax->datum stx)])
     (datum->syntax stx
@@ -64,14 +65,17 @@
     [(_ test exp1 exp2)  #'(cond [test exp1]
                                  [else exp2])]))
 
+
 (define-syntax-rule (my-if-3 test exp1 exp2)
     (cond [test exp1]
           [else exp2]))
+
 
 (define-syntax-rule (swap! x y)
   (let ([tmp x])
     (set! x y)
     (set! y tmp)))
+
 
 (define-syntax-rule (loop n body)
   (let rec ([i 0])
@@ -79,10 +83,18 @@
       body
       (rec (+ i 1)))))
 
+
 ;; does the variable `i` in the macro above "leak"? how to test this?
 #; (loop 10 (println i))
 #; (let ([i 10]) (loop i (println i)))
 
+
+;; Racket macros are "hygienic" by design -- i.e., identifiers introduced by
+;; a macro exist in a separate lexical context from where it is called, and
+;; so cannot be accidentally (or intentionally) used by call-site code.
+
+
+;; but we can use identifiers that are "passed in" as syntax objects
 (define-syntax-rule (for-loop var n body)
   (let rec ([var 0])
     (when (< var n)
@@ -93,16 +105,20 @@
 ;; "Anaphoric if": a convenient programmer-defined control structure
 
 #; (aif (compute-test-result ...)  ; may be a lengthy computation
-        (use it)     ; if true; `it` refers to the result of the computation
-        (else-case)  ; if false
+        (use it)      ; `it` refers to the result of the computation
+        (else-case))  
 
-        
+
+;; what's wrong with the following attempt?
 (define-syntax-rule (aif test exp1 exp2)
   (let ([it test])
     (if it
-        exp1
+        exp1  ; problem: `it` is "hidden" due to hygiene rule!
         exp2)))
 
+
+;; we can "fix" this by manually crafting syntax objects, thereby manually
+;; breaking hygiene
 (define-syntax (aif-2 stx)
   (let ([sexp (syntax->datum stx)])
     (datum->syntax stx
