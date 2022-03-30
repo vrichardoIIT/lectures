@@ -181,7 +181,7 @@ E.g., consider the following Node.js (an asynch JavaScript framework) code:
 ---
 
 Continuations, as a general mechanism for explicitly manipulating the flow of
- ontrol in a program, have many other applications:
+control in a program, have many other applications:
 
 - exceptions
 - (lazy) generators
