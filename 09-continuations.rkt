@@ -26,6 +26,10 @@ Alternatively, we could represent the continuation as a function:
 
     (lambda (v) (h (g v)))
 
+And f could *call this continuation* with the result of its application to x:
+
+    (f x (lambda (v) (h (g v))))
+
 And f could *call this continuation* with the result of its application to x.
 This makes the flow of control from f to its continuation explicit. We call
 this *continuation passing style* (CPS).
