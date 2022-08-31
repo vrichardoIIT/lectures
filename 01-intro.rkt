@@ -66,15 +66,6 @@ A sexp is either an *atom* or a *list*.
 ;; Let's write some (syntactically) valid sexps!
 ;; Note: `#;` is a convenient, special "sexp comment"
 
-#; 
-
-#; 
-
-#; 
-
-#; 
-
-#; 
 
 
 #|-----------------------------------------------------------------------------
@@ -98,33 +89,8 @@ A sexp is either an *atom* or a *list*.
   like a function to its arguments, but with special semantics
 -----------------------------------------------------------------------------|#
 
-;; try evaluating these sexps:
+;; try evaluating some sexps
 
-1
-
-2.5
-
-#t
-
-#\m
-
-+
-
-abs
-
-(+ 300 40)
-
-(abs -23)
-
-(* 2 3 4)
-
-(= (+ 2 3) (- 6 1))
-
-(println "hello world")
-
-(if (< (random 10) 5) ; why can't `if` be a function?
-  (println "heads")
-  (println "tails"))
 
 
 #|-----------------------------------------------------------------------------
@@ -147,21 +113,8 @@ There is also another special form, `quasiquote`, which can be used with
 Quasiquoting is particularly useful for metaprogramming!
 -----------------------------------------------------------------------------|#
 
-;; try:
+;; try evaluating some quote/quasiquote/unquote-based forms
 
-(quote x)
-
-'x
-
-'(foo x y z)
-
-'(this is ([x y z])
-  (not semantically meaningful Racket code)
-  but it [is *syntactically* legal!])
-
-`(x y z)
-
-`(x ,(+ 1 2) y z)
 
 
 #|-----------------------------------------------------------------------------
@@ -170,22 +123,24 @@ Quasiquoting is particularly useful for metaprogramming!
 Define global variables with `define` and local variables with `let` and `let*`
 -----------------------------------------------------------------------------|#
 
-(define course-id "CS 440")
+(define *course-id* "CS 440")  ; sometimes we use "earmuffs" for global vars
 
-(define w (expt 2 40))
+(define bignum (expt 2 50))
 
-(let ([x 1] 
-      [y 2]) 
-  (+ w x y))
+;; introducing local vars
+(define cnum (let ([x 10]
+                   [y 44])
+               (* x y)))
 
 ;; find roots of x^2 + 3x - 4 = (x - 1)(x + 4) = 0
-(let* ([a  1]
-       [b  3]
-       [c -4]
-       [disc (- (* b b) (* 4 a c))]
-       [sqr-disc (sqrt disc)])
-  (values (/ (+ (- b) sqr-disc) (* 2 a))
-          (/ (- (- b) sqr-disc) (* 2 a))))
+;;  - need let* to use earlier vars when defining later ones
+(define roots (let* ([a  1]
+                     [b  3]
+                     [c -4]
+                     [disc (- (* b b) (* 4 a c))]
+                     [sqr-disc (sqrt disc)])
+                `(,(/ (+ (- b) sqr-disc) (* 2 a))
+                  ,(/ (- (- b) sqr-disc) (* 2 a)))))
 
 
 #|-----------------------------------------------------------------------------
@@ -218,7 +173,7 @@ Useful functions:
   - `empty?`: tests whether a list is empty
 -----------------------------------------------------------------------------|#
 
-;; pairs aren't necessarily lists
+;; pairs aren't necessarily lists!
 
 (define pair1 (cons 1 2))
 
