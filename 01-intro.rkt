@@ -66,15 +66,16 @@ A sexp is either an *atom* or a *list*.
 ;; Let's write some (syntactically) valid sexps!
 ;; Note: `#;` is a convenient, special "sexp comment"
 
-#; 
+#; 42
 
-#; 
+#; #t
 
-#; 
+#; "hello world!"
 
-#; 
+#; my-first-symbol!
 
-#; 
+#; (this "is" (a valid ("sexp" 42 1 100))
+         because "it has the correct syntax")
 
 
 #|-----------------------------------------------------------------------------
@@ -117,6 +118,10 @@ abs
 (abs -23)
 
 (* 2 3 4)
+
+add1
+
+(* 2 3 (add1 4))
 
 (= (+ 2 3) (- 6 1))
 
@@ -170,22 +175,24 @@ Quasiquoting is particularly useful for metaprogramming!
 Define global variables with `define` and local variables with `let` and `let*`
 -----------------------------------------------------------------------------|#
 
-(define course-id "CS 440")
+(define *course-id* "CS 440")  ; sometimes we use "earmuffs" for global vars
 
-(define w (expt 2 40))
+(define bignum (expt 2 50))
 
-(let ([x 1] 
-      [y 2]) 
-  (+ w x y))
+;; introducing local vars
+(define cnum (let ([x 10]
+                   [y 44])
+               (* x y)))
 
 ;; find roots of x^2 + 3x - 4 = (x - 1)(x + 4) = 0
-(let* ([a  1]
-       [b  3]
-       [c -4]
-       [disc (- (* b b) (* 4 a c))]
-       [sqr-disc (sqrt disc)])
-  (values (/ (+ (- b) sqr-disc) (* 2 a))  ; `values` may return multiple values
-          (/ (- (- b) sqr-disc) (* 2 a))))
+;;  - need let* to use earlier vars when defining later ones
+(define roots (let* ([a  1]
+                     [b  3]
+                     [c -4]
+                     [disc (- (* b b) (* 4 a c))]
+                     [sqr-disc (sqrt disc)])
+                `(,(/ (+ (- b) sqr-disc) (* 2 a))
+                  ,(/ (- (- b) sqr-disc) (* 2 a)))))
 
 
 #|-----------------------------------------------------------------------------
