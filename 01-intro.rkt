@@ -184,6 +184,14 @@ Define global variables with `define` and local variables with `let` and `let*`
                    [y 44])
                (* x y)))
 
+;; scoping / visibility / shadowing work how you'd expect
+(define x 10)
+
+(define y (+ x (let ([x 20])
+                 (+ (let ([x 30])
+                      (* x 5))
+                    x))))
+
 ;; find roots of x^2 + 3x - 4 = (x - 1)(x + 4) = 0
 ;;  - need let* to use earlier vars when defining later ones
 (define roots (let* ([a  1]
