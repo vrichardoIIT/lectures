@@ -1,8 +1,5 @@
 #lang racket
 
-(require racket/trace) ; for dynamic function call traces
-
-
 #|-----------------------------------------------------------------------------
 ;; Function definitions
 
@@ -51,6 +48,7 @@
 (define (f6 . rest)
   (length rest))
 
+
 ;; lambda expressions also support rest arguments
 (define f7
   (lambda args ; `args` is a list of all the arguments
@@ -77,7 +75,7 @@
 (define (say-hi-1 name)
   (if (equal? name "Jane")
       (println "Me Tarzan!")
-      (println (format "Hello, ~a" name))))
+      (printf "Hello, ~a~n" name))) ; `printf` does interpolation/formatting
 
 
 ;; digression: equality testing
@@ -102,54 +100,62 @@
   ;; `equal?` for value comparison
   (equal? "hello world" "hello world")
   (equal? '(a b c) '(a b c))))
+ 
 
-
+;; use `string-ref` to get a char by index in a string
 (define (say-hi-2 name)
   (if (equal? (string-ref name 0) #\J)
+      ;; `begin` for multi-expression "blocks"
       (begin (println "Me Tarzan!")
-             (println (format "You ~a!" name)))
-      (println (format "Hello, ~a" name))))
+             (printf "You ~a!~n" name))
+      (printf "Hello, ~a~n" name)))
 
 
+;; `when` is an `else`-less `if`, with an automatic `begin`
 (define (say-hi-3 name)
-  (when (regexp-match? #rx"^Jan.*" name)
+  (when (regexp-match? #rx"^Jan.*" name) ; regular exp matching!
     (println "Me Tarzan!")
-    (println (format "You ~a!" name))))
+    (printf "You ~a!~n" name)))
 
 
 (define (say-hi-4 name)
+  ;; `cond` is a multi-way branch
   (cond [(equal? name "Jane")
          (println "Me Tarzan!")]
         [(regexp-match? #rx"^Jan.*" name)
-         (println (format "You ~a?" name))]
+         (printf "You ~a?~n" name)]
         [else
-         (println (format "Hello, ~a" name))]))
+         (printf "Hello, ~a~n" name)]))
 
 
 (define (say-hi-5 name)
+  ;; `case` checks a value against multiple options using `equal?`
   (case (char-downcase (string-ref name 0))
     [(#\j) (println "Me Tarzan!")]
     [(#\a #\e #\i #\o #\u) (println "Ewoh!")]
-    [else (println (format "Hello, ~a" name))]))
+    [else (printf "Hello, ~a~n" name)]))
 
 
 (define (say-hi-6 name)
+  ;; `match` is a general purpose pattern matcher with its own special language
   (match name
     ["Jane" (println "Me Tarzan!")]
     [(regexp #rx"^Jan.*") (println "Me Tarzan?")]
-    [(? string?) (println (format "Hello, ~a" name))]
-    [(list x y) (println (format "Hello, ~a and ~a" x y))]
+    [(? string?) (printf "Hello, ~a~n" name)]
+    [(list x y) (printf "Hello, ~a and ~a~n" x y)]
     [(list "Jane") (println "Hello, Jane-in-a-list")]
-    [(list "Jane" x "Jane") (println (format "Hello, ~a-between-Janes" x))]
-    [(list x y x) (println (format "Hello, ~a-between-~as" y x))]
+    [(list "Jane" x "Jane") (printf "Hello, ~a-between-Janes~n" x)]
+    [(list x y x) (printf "Hello, ~a-between-~as~n" y x)]
     [(list _ _ _ "Jane") (println "Hi, Jane in 4th place")]
-    [(or 'Jane '(Jane)) (format "Hi, Jane in hiding")]
+    [(list x ...) (printf "Hi, lots of ~as~n" x)]
+    [(or 'Jane '(Jane)) (println "Hi, Jane in hiding")]
     [_ (println "Stranger, Danger!")]))
 
 
 (define (say-hi-7 name)
   (let ([greetings '("Hello" "Hola" "你好")]
         [index 0])
+    ;; what are we returning? what is going on?!
     (lambda ()
-      (println (format "~a, ~a" (list-ref greetings index) name))
+      (printf "~a, ~a~n" (list-ref greetings index) name)
       (set! index (remainder (add1 index) (length greetings))))))
