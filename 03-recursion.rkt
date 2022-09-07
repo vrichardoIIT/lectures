@@ -4,19 +4,29 @@
 
 
 #|-----------------------------------------------------------------------------
-;; Recursion
+;; Recursion (and Iteration)
 -----------------------------------------------------------------------------|#
 
-;; Fibonacci series: 0 1 1 2 3 5 8 13 21 34 55 ...
-(define (fib n)
-  (void))
+(define (println-times datum n)
+  (println datum))
 
-(trace fib)
 
+;; integer summation
 (define (sum-to n)
   (void))
 
-(trace sum-to)
+; (trace sum-to)
+
+
+;; Fibonacci series: 0 1 1 2 3 5 8 13 21 34 55 ...
+(define (fib n)
+  (if (<= n 1)
+      n
+      (+ (fib (- n 1))
+         (fib (- n 2)))))
+
+; (trace fib)
+
 
 
 #|-----------------------------------------------------------------------------
