@@ -24,6 +24,7 @@ Some useful built-in HOFs and related functions:
 (define (sum . xs)
   (apply + xs))
 
+
 ;; `curry` gives us partial application
 (values
  (cons 1 2)
@@ -41,31 +42,36 @@ Some useful built-in HOFs and related functions:
 
 (define thrice (curry repeat 3))
 
+
 ;; compose is a simple but powerful form of "functional "glue"
 ((compose sqrt abs) -2)
+
+(define (my-compose f g)
+  (lambda (x) (f (g x))))
 
 (define (flip f)
   (lambda (x y) (f y x)))
 
 (define even?
-  (compose (curry = 0)
-           (curry (flip remainder) 2)))
+  (my-compose (curry = 0)
+              (curry (flip remainder) 2)))
+
 
 ;; eval is like having access to the Racket compiler in Racket!
-#; (values ; note -- evaluate the following at the REPL!
-    (eval '(+ 1 2 3))
-    (eval (cons 'println (cons "hello" '()))))
+(values ; note -- no need for explicit namespace at REPL
+ (eval '(+ 1 2 3) (make-base-namespace))
+ (eval (cons 'println (cons "hello" '())) (make-base-namespace)))
 
 (define (my-if test e1 e2)
   (eval `(cond (,test ,e1)
                (else ,e2))))
 
-#; (my-if '(< 1 2) '(println "true") '(println "false"))
+; (my-if '(< 1 2) '(println "true") '(println "false"))
 
 (define (repeatedly n sexp)
   (eval (cons 'begin (repeat n sexp))))
 
-#; (repeatedly 10 '(println "hello"))
+; (repeatedly 10 '(println "hello"))
 
 
 #|-----------------------------------------------------------------------------
