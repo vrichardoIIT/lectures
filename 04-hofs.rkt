@@ -16,23 +16,23 @@ Some useful built-in HOFs and related functions:
 -----------------------------------------------------------------------------|#
 
 ;; `apply` applies a function to lists
-#; (values
-    (apply + '(1 2 3))
-    (apply + 1 2 '(3))
-    (apply + 1 2 3 '())) ; the last argument to `apply` has to be a list
+(values
+ (apply + '(1 2 3))
+ (apply + 1 2 '(3))
+ (apply + 1 2 3 '())) ; the last argument to `apply` has to be a list
 
 (define (sum . xs)
   (apply + xs))
 
 ;; `curry` gives us partial application
-#; (values
-    (cons 1 2)
-    (curry cons 1 2)
-    ((curry cons) 1 2)
-    (((curry cons) 1) 2)
-    ((curry cons 1) 2))
+(values
+ (cons 1 2)
+ (curry cons 1 2)
+ ((curry cons) 1 2)
+ (((curry cons) 1) 2)
+ ((curry cons 1) 2))
 
-#; (((curry (lambda (x y z) (+ x y z)) 1) 2) 3)
+(((curry (lambda (x y z) (+ x y z)) 1) 2) 3)
 
 (define (repeat n x)
   (if (= n 0)
@@ -42,7 +42,7 @@ Some useful built-in HOFs and related functions:
 (define thrice (curry repeat 3))
 
 ;; compose is a simple but powerful form of "functional "glue"
-#; ((compose sqrt abs) -2)
+((compose sqrt abs) -2)
 
 (define (flip f)
   (lambda (x y) (f y x)))
@@ -52,7 +52,7 @@ Some useful built-in HOFs and related functions:
            (curry (flip remainder) 2)))
 
 ;; eval is like having access to the Racket compiler in Racket!
-#; (values
+#; (values ; note -- evaluate the following at the REPL!
     (eval '(+ 1 2 3))
     (eval (cons 'println (cons "hello" '()))))
 
@@ -72,43 +72,82 @@ Some useful built-in HOFs and related functions:
 ;; Some list-processing HOFs
 -----------------------------------------------------------------------------|#
 
+;; `map`
 (define (map f lst)
-  (if (null? lst)
+  (if (empty? lst)
       '()
       (cons (f (first lst)) (map f (rest lst)))))
 
-#; (map (curry * 2) (range 10))
-#; (map (lambda (r) (circle r "solid" "blue")) (range 10))
 
+(values
+ (map add1 (range 10))
+
+ (map (curry * 2) (range 10))
+ 
+ (map string-length '("hello" "how" "is" "the" "weather?")))
+
+
+;; `filter`
 (define (filter p lst)
-  (if (null? lst)
-      '()
-      (if (p (first lst))
-          (cons (first lst) (filter p (rest lst)))
-          (filter p (rest lst)))))
+  (cond [(empty? lst) '()]
+        [(p (first lst)) (cons (first lst) (filter p (rest lst)))]
+        [else (filter p (rest lst))]))
 
-#; (filter even? (range 10))
-#; (filter (curry < 5) (range 10))
 
-(define (foldr f init lst)
-  (if (null? lst)
-      init
-      (f (first lst) (foldr f init (rest lst)))))
+(values 
+ (filter even? (range 10))
+   
+ (filter (curry < 5) (range 10))
 
-#; (trace foldr)
-#; (foldr + 0 (range 10))
-#; (foldl - 0 (range 10))
-#; (foldr / 1 '(2 3 4))
+ (filter (compose (curry equal? "hi")
+                  car)
+         '(("hi" "how" "are" "you")
+           ("see" "you" "later")
+           ("hi" "med" "low")
+           ("hello" "there"))))
 
-(define (foldl f init lst)
-  (if (null? lst)
-      init
-      (foldl f (f init (first lst)) (rest lst))))
 
-#; (trace foldl)
-#; (foldl + 0 (range 10))
-#; (foldl - 0 (range 10))
-#; (foldl / 1 '(2 3 4))
+;; `foldr`
+(define (foldr f val lst)
+  (if (empty? lst)
+      val
+      (f (first lst) (foldr f val (rest lst)))))
+
+; (trace foldr)
+
+
+(values
+ (foldr + 0 (range 10))
+
+ (foldr cons '() (range 10))
+
+ (foldr cons '(a b c d e) (range 5))
+
+ (foldr (lambda (x acc) (cons x acc))
+        '()
+        (range 5)))
+
+
+;; `foldl`
+(define (foldl f acc lst)
+  (if (empty? lst)
+      acc
+      (foldl f (f (first lst) acc) (rest lst))))
+
+; (trace foldl)
+
+
+(values
+ (foldl + 0 (range 10))
+    
+ (foldl cons '() (range 10))
+    
+ (foldl cons '(a b c d e) (range 5))
+    
+ (foldl (lambda (x acc) (cons x acc))
+        '()
+        (range 5)))
+
 
 
 #|-----------------------------------------------------------------------------
