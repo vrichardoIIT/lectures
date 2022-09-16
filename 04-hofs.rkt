@@ -9,9 +9,13 @@
 HOFs either take a function as an argument or return a function.
 
 Some useful built-in HOFs and related functions:
+
 - `apply`: apply a function to a list of arguments
+
 - `curry`: returns a version of a function that can be partially applied
+
 - `compose`: returns a function that is the composition of two other functions
+
 - `eval`: evaluates a sexp
 -----------------------------------------------------------------------------|#
 
@@ -76,6 +80,14 @@ Some useful built-in HOFs and related functions:
 
 #|-----------------------------------------------------------------------------
 ;; Some list-processing HOFs
+
+- `map`: applies a function to every element of a list, returning the results
+
+- `filter`: collects the values of a list for which a predicate tests true
+
+- `foldr`: implements *primitive recursion*
+
+- `foldl`: like `foldr`, but folds from the left; tail-recursive
 -----------------------------------------------------------------------------|#
 
 ;; `map`
@@ -121,6 +133,12 @@ Some useful built-in HOFs and related functions:
 
 ; (trace foldr)
 
+(define sum2 (curry foldr + 0))
+
+(define copy-list (curry foldr cons '()))
+
+(define (concat l1 l2) (foldr cons l2 l1))
+
 
 (values
  (foldr + 0 (range 10))
@@ -140,7 +158,21 @@ Some useful built-in HOFs and related functions:
       acc
       (foldl f (f (first lst) acc) (rest lst))))
 
-; (trace foldl)
+(trace foldl)
+
+(define sum3 (curry foldl + 0))
+
+(define reverse (curry foldl cons '()))
+
+(define (partition x lst)
+  (foldl (lambda (y acc)
+           (if (< y x)
+               (list (cons y (first acc))
+                     (second acc))
+               (list (first acc)
+                     (cons y (second acc)))))
+         '(() ())
+         lst))
 
 
 (values
@@ -161,16 +193,52 @@ Some useful built-in HOFs and related functions:
 
 - A free variable is bound to a value *in the environment where it is defined*, 
   regardless of when it is used
+
 - This leads to one of the most important ideas we'll see: the *closure*
 -----------------------------------------------------------------------------|#
 
+(define (simple n)
+  (let ([loc 10]) ; what's the lifetime of this local var?
+    (+ n loc)))
+
+(define (weird n)
+  (let ([loc n]) ; how about this one?
+    (lambda ()
+      (println loc))))
+
+(define foo (weird 10))
+
+(foo)
+
+(define (weird2 n)
+  (lambda ()
+    (println n))) ; params are also local vars
+
+(define foo2 (weird2 20))
+
+(foo2)
+
 (define (make-adder n)
-  (lambda (x) (+ x n)))
+  (lambda (x) (+ x n))) ; functions "close" over their data
 
 (define a (make-adder 1))
 
-#; (a 20)
+(a 10)
+(a 20)
 
-(define x 1000)
+(define (make-obj) ; objects are special cases of closures!
+  (let ([attr 0])
+    (lambda (cmd)
+      (case cmd
+        ['up (set! attr (add1 attr))]
+        ['down (set! attr (sub1 attr))]
+        ['show (println attr)]))))
 
-#; (a 20)
+(define o (make-obj))
+(o 'show)
+(o 'up)
+(o 'up)
+(o 'up)
+(o 'show)
+(o 'down)
+(o 'show)
