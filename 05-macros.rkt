@@ -1,17 +1,24 @@
 #lang racket
 
-(require macro-debugger/stepper)
-(require (for-syntax racket/list))
+(require macro-debugger/stepper
+         (for-syntax racket/base)
+         (for-syntax racket/list))
 
-;; syntax objects attach syntactical context to sexps
+#|------------------------------------------------------------------------------
+;; Syntax objects
+
+- syntax objects attach syntactical context to sexps
+------------------------------------------------------------------------------|#
 
 (define s1 (syntax "hello world"))
 
 (define s2 (syntax (foo bar 1 2 3)))
 
-(define s3 #'(foo bar 1 2 3)) ; #' is syntactic sugar for `syntax`
+(define s3 #'(foo bar 1 2 3)) ; #' is shorthand for `syntax`
 
 (define s4 #'(if (< 1 2) "true" "false"))
+
+(define s5 #`(if #,(< 1 2) "true" "false"))
 
 #; (values
     (syntax-source s3)
@@ -24,51 +31,76 @@
 #; (eval-syntax s4)
 
 
-;; `datum->syntax` lets us create syntax objects from sexps (and context)
 
-#; (datum->syntax #f '(println "hello world"))
+#|------------------------------------------------------------------------------
+;; Syntax transformers, aka "Macros"
+------------------------------------------------------------------------------|#
 
+;; `define-syntax` defines a macro
 
-;; `define-syntax` defines a syntax transformer, aka macro
-
-(define-syntax always-say-hi
-  (lambda (stx)
-    #'(println "hello!")))
-
-
-(define-syntax quote-myself
-  (lambda (stx)
-    (datum->syntax stx `(quote ,stx))))
+(define-syntax say-hi
+  (lambda (stx) ; `stx` refers to the original syntax object 
+    #`(quote (hi #,stx))))
 
 
-;; we can use `expand/step` (and others) to help us see the expansion of a macro
+(define-syntax (say-hi2 stx) ; alternate form
+  #`(quote (hi #,stx)))
 
-#; (expand/step #'(quote-myself ha ha ha))
 
+(define-syntax (infix stx)
+  (let ([datum (syntax->datum stx)])
+    #`(#,(third datum) #,(second datum) #,(fourth datum))))
 
-(define-syntax (reversed stx)
-  (datum->syntax stx (reverse (cdr (syntax->datum stx)))))
-
-#; (expand/step #'(reversed 1 2 3 +))
+#; (syntax->datum (expand-once #'(infix 2 * 3)))
 
 
 (define-syntax (my-if stx)
   (let ([sexp (syntax->datum stx)])
-    (datum->syntax stx
-                   `(cond [,(second sexp) ,(third sexp)]
-                          [else ,(fourth sexp)]))))
+    #`(cond [#,(second sexp) #,(third sexp)]
+            [else #,(fourth sexp)])))
+
+#; (syntax->datum
+    (expand-once #'(my-if (< 1 2)
+                          (println "yes")
+                          (println "no"))))
+
+#; (syntax->datum
+    (expand #'(my-if (< 1 2)
+                     (println "yes")
+                     (println "no"))))
 
 
-;; `syntax-case` provides us with pattern matching and takes a template
-(define-syntax (my-if-2 stx)
+;; `syntax-case` lets us pattern match on syntax objects
+(define-syntax (infix2 stx)
   (syntax-case stx ()
-    [(_ test exp1 exp2)  #'(cond [test exp1]
-                                 [else exp2])]))
+    [(_ lhs op rhs)
+     #'(op lhs rhs)]))
 
 
+(define-syntax (my-if-2 stx)
+  (syntax-case stx (then otherwise) ; parentheses enclose syntax "literals"
+    [(_ test exp1 exp2) ; matched ids can be used directly in syntax forms
+     #'(cond [test exp1]
+             [else exp2])]
+    [(_ test then exp1 otherwise exp2)
+     #'(cond [test exp1]
+             [else exp2])]))
+
+#; (syntax->datum
+    (expand-once #'(my-if-2 (< 1 2)
+                            (println "yes")
+                            (println "no"))))
+
+#; (syntax->datum
+    (expand-once #'(my-if-2 (< 1 2)
+                            then (println "yes")
+                            otherwise (println "no"))))
+
+
+;; define-syntax-rule is shorthand for a limited form of `syntax-case`
 (define-syntax-rule (my-if-3 test exp1 exp2)
-    (cond [test exp1]
-          [else exp2]))
+  (cond [test exp1]
+        [else exp2]))
 
 
 (define-syntax-rule (swap! x y)
@@ -83,18 +115,11 @@
       body
       (rec (+ i 1)))))
 
-
-;; does the variable `i` in the macro above "leak"? how to test this?
+;; can we interact with the `i` introduced in the `loop` macro from "outside"?
 #; (loop 10 (println i))
 #; (let ([i 10]) (loop i (println i)))
 
 
-;; Racket macros are "hygienic" by design -- i.e., identifiers introduced by
-;; a macro exist in a separate lexical context from where it is called, and
-;; so cannot be accidentally (or intentionally) used by call-site code.
-
-
-;; but we can use identifiers that are "passed in" as syntax objects
 (define-syntax-rule (for-loop var n body)
   (let rec ([var 0])
     (when (< var n)
@@ -102,7 +127,51 @@
       (rec (+ var 1)))))
 
 
+
+#|------------------------------------------------------------------------------
+;; Hygiene
+
+- Racket macros are "hygienic" by design -- i.e., identifiers introduced by
+  a macro exist in a separate lexical context from where it is called, and
+  so cannot be accidentally (or intentionally) used by call-site code.
+------------------------------------------------------------------------------|#
+
+;; syntax objects created with `syntax` are hygienic -- their bindings are
+;; determined by their lexical context (i.e., where they are defined):
+(define x 440)
+(define-syntax (hygienic stx)
+  #'(println x))
+
+#; (values
+    (hygienic)
+    (let ([x 10]) (hygienic)))
+
+(define-syntax (hygienic2 stx)
+  #'(define foo 440))
+
+
+;; but `datum->syntax` allows us to "break" hygiene by inheriting the lexical
+;; context of some other syntax object (e.g., from the call site)
+(define-syntax (unhygienic stx)
+  (datum->syntax stx '(println x)))
+
+#; (values
+    (unhygienic)
+    (let ([x 10]) (unhygienic)))
+
+(define-syntax (unhygienic2 stx)
+  (datum->syntax stx '(define bar 440)))
+
+#; (begin (unhygienic2)
+       (println bar))
+
+
 ;; "Anaphoric if": a convenient programmer-defined control structure
+;; 
+;; an·a·phor | ˈanəˌfôr | (Noun)
+;; - a word or phrase that refers to an earlier word or phrase
+;;   (e.g., in "my cousin said she was coming", "she" is used as an
+;;   anaphor for my cousin).
 
 #; (aif (compute-test-result ...)  ; may be a lengthy computation
         (use it)      ; `it` refers to the result of the computation
@@ -126,3 +195,5 @@
                       (if it
                           ,(third sexp)
                           ,(fourth sexp))))))
+
+;; still not perfect!
