@@ -127,6 +127,8 @@ add1
 
 (println "hello world")
 
+(list 1 (+ 2 3) "hi")
+
 (if (< (random 10) 5) ; why can't `if` be a function?
   (println "heads")
   (println "tails"))
@@ -144,10 +146,12 @@ sexp, and instead just return the value of the sexp.
   (quote (1 2 3)) == '(1 2 3)
 
 There is also another special form, `quasiquote`, which can be used with 
-`unquote` to selectively build sexps with some evaluated sub-sexps.
+`unquote` / `unquote-splicing` to selectively build sexps with some evaluated
+sub-sexps.
 
   (quasiquote x) == `x
   (quasiquote (x (unquote y) z)) == `(x ,y z)
+  (quasiquote (x (+ (unquote-splicing (list 1 2))))) == `(x (+ ,@(list 1 2)))
 
 Quasiquoting is particularly useful for metaprogramming!
 -----------------------------------------------------------------------------|#
@@ -167,6 +171,8 @@ Quasiquoting is particularly useful for metaprogramming!
 `(x y z)
 
 `(x ,(+ 1 2) y z)
+
+`(a b ,@'(c (d) e) f g)
 
 
 #|-----------------------------------------------------------------------------
