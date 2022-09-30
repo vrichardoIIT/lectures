@@ -187,6 +187,29 @@ Some useful built-in HOFs and related functions:
         (range 5)))
 
 
+;; for/fold is a handy built-in function for accumulating results a la fold
+;; - basic syntax: (for/fold ([accum-id init-expr])
+;;                           ([id seq-expr] ...)
+;;                    body)
+
+(for/fold ([sum 0])
+          ([n (range 11)])
+  (+ n sum))
+
+(for/fold ([acc '()])
+          ([val '(a b c d e)])
+  (cons val acc))
+
+(for/fold ([acc '()])
+          ([v1 (range 10)]
+           [v2 '(a b c d e)])
+  (cons (cons v2 v1) acc))
+
+(for/fold ([h (hash)])
+          ([name '("Molly" "Eric" "Anna" "Sam" "Rishi")])
+  (hash-set h name (string-length name)))
+
+
 
 #|-----------------------------------------------------------------------------
 ;; Lexical scope
