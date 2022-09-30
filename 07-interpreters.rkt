@@ -42,7 +42,7 @@
 
 We're going to start with a very simple language and slowly add to it. Our
 first iteration will support integer literals, the binary arithmetic operations
- +` and `*`, and `let`-bound variables. The syntax will mirror Racket's. 
+`+` and `*`, and `let`-bound variables. The syntax will mirror Racket's. 
 -----------------------------------------------------------------------------|#
 
 ;; Some test cases
@@ -139,10 +139,10 @@ Review: What is parsing?
     ;; for interpreter v1: arithmetic
     [(? integer?)
      (int-exp sexp)]
-    [(list '+ lhs rhs) (arith-exp "+" (parse lhs) (parse rhs))]
-    [(list '* lhs rhs) (arith-exp "*" (parse lhs) (parse rhs))]
-    #; [(list (and op (or '+ '*)) lhs rhs) ; alternative to above two patterns
-        (arith-exp (symbol->string op) (parse lhs) (parse rhs))]
+    [(list '+ lhs rhs)
+     (arith-exp "PLUS" (parse lhs) (parse rhs))]
+    [(list '* lhs rhs)
+     (arith-exp "TIMES" (parse lhs) (parse rhs))]
 
     ;; for interpreter v2: variables
     [(? symbol?)
@@ -168,9 +168,9 @@ Review: What is parsing?
     [(int-exp val) val]
 
     ;; arithmetic operations
-    [(arith-exp "+" lhs rhs)
+    [(arith-exp "PLUS" lhs rhs)
      (+ (eval lhs) (eval rhs))]
-    [(arith-exp "*" lhs rhs)
+    [(arith-exp "TIMES" lhs rhs)
      (* (eval lhs) (eval rhs))]
 
     ;; basic error handling
@@ -180,9 +180,8 @@ Review: What is parsing?
 ;; Let's define a REPL!
 (define (repl)
   (let ([stx (parse (read))])
-    (when stx
-      (println (eval stx))
-      (repl))))
+    (println (eval stx))
+    (repl)))
 
 
 ;; Interpreter v2: Adding variables
@@ -192,9 +191,9 @@ Review: What is parsing?
     (match expr
       ;; arithmetic
       [(int-exp val) val]
-      [(arith-exp "+" lhs rhs)
+      [(arith-exp "PLUS" lhs rhs)
        (+ (eval-env lhs env) (eval-env rhs env))]
-      [(arith-exp "*" lhs rhs)
+      [(arith-exp "TIMES" lhs rhs)
        (* (eval-env lhs env) (eval-env rhs env))]
 
       ;; variable binding
