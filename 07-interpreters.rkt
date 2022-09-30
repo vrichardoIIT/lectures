@@ -36,6 +36,7 @@
     [_ "I don't know what this is"]))
 
 
+
 #|-----------------------------------------------------------------------------
 ;; Our language
 
@@ -45,40 +46,26 @@ first iteration will support integer literals, the binary arithmetic operations
 -----------------------------------------------------------------------------|#
 
 ;; Some test cases
-(define p1 '(+ 1 2))
+(define p1 "(+ 1 2)")
 
-(define p2 '(* 2 (+ 3 4)))
+(define p2 "(* 2 (+ 3 4))")
 
-(define p3 '(+ x 1))
+(define p3 "(+ x 1)")
 
-(define p4 '(* w (+ x y)))
+(define p4 "(* w (+ x y))")
 
-(define p5 '(let ([x 10])
-              (+ x 1)))
+(define p5 "(let ([x 10])
+              (+ x 1))")
 
-(define p6 '(let ([x 10]
+(define p6 "(let ([x 10]
                   [y 20])
-              (+ x y)))
+              (+ x y))")
 
-(define p7 '(let ([x 10])
+(define p7 "(let ([x 10])
               (let ([y 20])
                 (+ x (let ([w 30])
-                       (* w y))))))
+                       (* w y)))))")
 
-
-#|-----------------------------------------------------------------------------
-;; Scanner
-
-Review: What is scanning?
-
-- Raw text input => "tokens" / words
------------------------------------------------------------------------------|#
-
-#; (read)
-
-;; `read` does much more than just scan our input! Because of how simple
-;; Racket syntax is, `read` returns an unadorned, list-based "syntax tree"
-;; based on the input -- i.e., an s-expression.
 
 
 #|-----------------------------------------------------------------------------
@@ -86,15 +73,49 @@ Review: What is scanning?
 
 Review: What is parsing?
 
-- Tokens => Syntax tree
+- Input string (source language) => Syntax object
 
-- Syntax tree = a representation of the syntactic structure of the code
+- A syntax object contains information about the structure of the code. Often,
+  we use a *tree* as an underlying representation.
 
-  - We can "decorate" nodes of the tree with attributes useful for evaluation,
-    optimization, etc.
+  - E.g., the code "(let ([x 10]) (+ x 1))"
+          
+          may be parsed to the syntax tree:
 
-Because Racket's `read` does so much for us, we already have a syntax tree!
-We just need to decorate it now :)
+                    let
+                   /   \
+                  x     +
+                 /     / \
+                10    x   1
+
+  - Racket sexps are a programmatic way of representing syntax trees!
+
+- Since our syntax mirrors Racket's, we may rely on Racket's reader to parse
+  our input to produce an initial syntax tree.
+-----------------------------------------------------------------------------|#
+
+;;; using Racket's reader
+(read (open-input-string "(+ 1 2)"))
+
+(read (open-input-string p1))
+
+(read (open-input-file "demo.txt"))
+
+
+;;; String-input reader (based on Racket's)
+(define (string-read str)
+  (read (open-input-string str)))  
+
+
+
+#|-----------------------------------------------------------------------------
+;; Parser (continued)
+
+- Our syntax tree doesn't currently contain much information besides tokens
+  pulled directly from the input string.
+
+- Next, we will recursively descend through the syntax tree, "decorating" its
+  nodes with information that can help us expand and evaluate it.
 -----------------------------------------------------------------------------|#
 
 ;;; Some types for decorating our syntax tree
@@ -133,26 +154,27 @@ We just need to decorate it now :)
     [_ (error (format "Can't parse: ~a" sexp))]))
 
 
+
 #|-----------------------------------------------------------------------------
 ;; Interpreter
 
-Syntax tree => Evaluation
+- The interpreter's job is the take the (decorated) syntax tree and evalute it!
 -----------------------------------------------------------------------------|#
 
-;; Interpreter v1: Integers and Arithmetic
-#; (define (eval expr)
-     (match expr
-       ;; ints evaluate to themselves
-       [(int-exp val) val]
+#; ;; Interpreter v1: Integers and Arithmetic
+(define (eval expr)
+  (match expr
+    ;; ints evaluate to themselves
+    [(int-exp val) val]
 
-       ;; arithmetic operations
-       [(arith-exp "+" lhs rhs)
-        (+ (eval lhs) (eval rhs))]
-       [(arith-exp "*" lhs rhs)
-        (* (eval lhs) (eval rhs))]
+    ;; arithmetic operations
+    [(arith-exp "+" lhs rhs)
+     (+ (eval lhs) (eval rhs))]
+    [(arith-exp "*" lhs rhs)
+     (* (eval lhs) (eval rhs))]
 
-       ;; basic error handling
-       [_ (error (format "Can't evaluate: ~a" expr))]))
+    ;; basic error handling
+    [_ (error (format "Can't evaluate: ~a" expr))]))
 
 
 ;; Let's define a REPL!
