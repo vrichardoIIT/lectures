@@ -27,6 +27,14 @@
 
 (define d1 (doohickey "thingamajig" "thinging" 199.99 "time travel"))
 
+;; we can also match against structs
+(define (which-widget? w)
+  (match w
+    [(widget "wrench" _ _) "It's a wrench!"]
+    [(doohickey "thingamajig" _ _ _) "It's a thingamajig!"]
+    [(? widget?) "It's some sort of widget"]
+    [_ "I don't know what this is"]))
+
 
 #|-----------------------------------------------------------------------------
 ;; Our language
@@ -104,36 +112,7 @@ We just need to decorate it now :)
 (struct let-exp (ids vals body) #:transparent)
 
   
-;; Parser v1
-#; (define (parse sexp)
-     (cond
-       [(number? sexp) (int-exp sexp)]
-       [(equal? (first sexp) '+)
-        (let ([lhs (second sexp)]
-              [rhs (third sexp)])
-          (void))]
-       [(equal? (first sexp) '*)
-        (let ([lhs (second sexp)]
-              [rhs (third sexp)])
-          (void))]))
-
-
-;; Digression: pattern matching with `match`
-(define (matcher sexp)
-  (match sexp
-    [(? number?) sexp]
-    ['a 'apple]
-    [(list _ _) 'any-two]
-    [(list 'a _ _) 'a-and-two-things]
-    [(list 'a 'b c d) (+ c d)]
-    [(list a _ _ a) a]
-    [(list 'foo (list b ...) c) (list b c)]
-    [(widget "wrench" pur pri) pri]
-    [(doohickey name _ _ _) name]
-    [_ (error (format "Can't parse: ~a" sexp))]))
-
-
-;; Parser v2: using `match`
+;; Parser
 (define (parse sexp)
   (match sexp
     ;; for interpreter v1: arithmetic
