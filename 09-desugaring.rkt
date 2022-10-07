@@ -84,8 +84,10 @@ e.g., support for lambda and function application with > 1 params/args
      (int-exp sexp)]
 
     ;; arithmetic expression
-    [(list (and op (or '+ '*)) lhs rhs)
-     (arith-exp (symbol->string op) (parse lhs) (parse rhs))]
+    [(list '+ lhs rhs)
+     (arith-exp "PLUS" (parse lhs) (parse rhs))] 
+    [(list '* lhs rhs)
+     (arith-exp "TIMES" (parse lhs) (parse rhs))]
     
     ;; identifier (variable)
     [(? symbol?)
@@ -117,13 +119,13 @@ e.g., support for lambda and function application with > 1 params/args
      (let-exp ids (map desugar vals) (desugar body)))
     
     ((lambda-exp ids body)
-     (foldr (lambda (id lexp) (lambda-exp id lexp))
+     (foldr (lambda (id body) (lambda-exp id body))
             (desugar body)
             ids))
     
-    ((app-exp f args)
-     (foldl (lambda (id fexp) (app-exp fexp id))
-            (desugar f)
+    ((app-exp fn args)
+     (foldl (lambda (id fn) (app-exp fn id))
+            (desugar fn)
             (map desugar args)))
     
     (_ exp)))
@@ -142,9 +144,9 @@ e.g., support for lambda and function application with > 1 params/args
       [(int-exp val) val]
 
       ;; arithmetic expression
-      [(arith-exp "+" lhs rhs)
+      [(arith-exp "PLUS" lhs rhs)
        (+ (eval-env lhs env) (eval-env rhs env))]
-      [(arith-exp "*" lhs rhs)
+      [(arith-exp "TIMES" lhs rhs)
        (* (eval-env lhs env) (eval-env rhs env))]         
       
       ;; variable binding
