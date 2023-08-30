@@ -10,13 +10,17 @@
            "Lots of Insidious, Silly Parentheses", 
            "Lost In a Sea of Parentheses"
 
+- Homoiconic; i.e., shared representation for code & data
+
 - Supports (but does not enforce) functional style
 
   - First class functions
   - Higher-order functions
   - Anonymous functions
 
-- Dynamically typed but type-safe
+- Dynamically and Strongly typed
+
+  - Sister language "Typed Racket" is statically typed
 
 - Pass by value with pointer semantics
 
@@ -271,3 +275,39 @@ Useful functions:
 (define lst9 '(1 (2 3) ((4 5) (6 7))))
 
 (define lst10 '(a (b (c d) (e f)) g))
+
+
+
+#|-----------------------------------------------------------------------------
+;; User defined types with `struct`
+-----------------------------------------------------------------------------|#
+
+;; define a `widget` type
+(struct widget          ; type name
+  (name purpose price)  ; attributes
+  #:transparent)        ; when printing a widget, show its attributes
+
+;; we get the following functions for free:
+;; - `widget`: constructor
+;; - `widget?`: predicate that returns #t for widget values
+;; - `widget-name`: retrieve `name` attribute
+;; - `widget-purpose`: retrieve `purpose` attribute
+;; - `widget-price`: retrieve `price` attribute
+
+(define w1 (widget "wrench" "wrenching" 9.99))
+(define w2 (widget "plier" "pliering" 12.99))
+
+
+;; define a `doohickey` type that is a sub-type of `widget`
+(struct doohickey widget (special-power) #:transparent)
+
+(define d1 (doohickey "thingamajig" "thinging" 199.99 "time travel"))
+
+
+;; define my own cons
+(struct mycons (car cdr) #:transparent)
+
+;; build and work with some of our lists ...
+(define mlst1 (mycons 1 (mycons 2 (mycons 3 (mycons 4 '())))))
+
+(define mlst2 (mycons 5 (mycons-cdr mlst1)))
