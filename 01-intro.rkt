@@ -27,10 +27,13 @@
 - Lexically scoped
 
 - Heap-based storage with garbage collection
+
+
 -----------------------------------------------------------------------------|#
 
 ;; a bit of Racket to whet your appetite
-(define (quicksort < l)
+(define
+  (quicksort < l)
   (match l
     ['() '()]
     [(cons x xs) 
@@ -38,6 +41,18 @@
        (append (quicksort < xs-lt) 
                (list x) 
                (quicksort < xs-gte)))]))
+#|
+Notes:
+ctrl r = run
+alt p = copy previous code
+
+; = comment
+
+#; comment sexp, right snytax but no semantics
+
+
+|#
+
 
 
 #|-----------------------------------------------------------------------------
@@ -72,6 +87,21 @@ A sexp is either an *atom* or a *list*.
 
 
 
+#; a  #; b
+
+#; "hello"
+
+#; #f
+
+#; abracadara-boom!!
+
+#; (hello
+
+    world)
+
+
+
+
 #|-----------------------------------------------------------------------------
 ;; Evaluating sexps
 
@@ -84,6 +114,12 @@ A sexp is either an *atom* or a *list*.
 - For lists, if the first element evaluates to a *function*, that function is
   applied to the rest of the values in the list
 
+  prefix form (+ 1 2) --> 1+2
+
+  (+ 5 (add1 10)) = 16
+
+  (random 10) random number from 1-10
+
   - e.g., `(f x y z)` applies function `f` to the values `x`, `y`, and `z`
 
   - Arguments are passed *by value*; i.e., the argument sexps are evaluated 
@@ -94,7 +130,11 @@ A sexp is either an *atom* or a *list*.
 -----------------------------------------------------------------------------|#
 
 ;; try evaluating some sexps
+ (if (< (random 10) 5 )
+     (println "heads")
+     (println "tails"))
 
+;if is not a function but a special form!!
 
 
 #|-----------------------------------------------------------------------------
@@ -114,6 +154,12 @@ There is also another special form, `quasiquote`, which can be used with
   (quasiquote x) == `x
   (quasiquote (x (unquote y) z)) == `(x ,y z)
 
+  (quasiquote (+ 5 (unquote (+ 1 2)))) == '(+ 5 3)
+  
+
+  quasiquote = `
+  unquote = ,
+
 Quasiquoting is particularly useful for metaprogramming!
 -----------------------------------------------------------------------------|#
 
@@ -127,15 +173,15 @@ Quasiquoting is particularly useful for metaprogramming!
 Define global variables with `define` and local variables with `let` and `let*`
 -----------------------------------------------------------------------------|#
 
-(define *course-id* "CS 440")  ; sometimes we use "earmuffs" for global vars
+(define *course-id* "CS 440")  ; sometimes we use "earmuffs" = ** for global vars
 
 (define bignum (expt 2 50))
 
 ;; introducing local vars
-(define cnum (let ([x 10]
+(define cnum (let ([x 10] ;introduce x and y
                    [y 44])
-               (* x y)))
-
+               (* x y))) ; x * y
+; "let" introduce local variable
 ;; find roots of x^2 + 3x - 4 = (x - 1)(x + 4) = 0
 ;;  - need let* to use earlier vars when defining later ones
 (define roots (let* ([a  1]
@@ -146,6 +192,8 @@ Define global variables with `define` and local variables with `let` and `let*`
                 `(,(/ (+ (- b) sqr-disc) (* 2 a))
                   ,(/ (- (- b) sqr-disc) (* 2 a)))))
 
+;let* is sequential
+
 
 #|-----------------------------------------------------------------------------
 ;; Pairs and Lists
@@ -155,10 +203,15 @@ constructed using the `cons` function:
 
   (cons x y)
 
+  cons are kinda like nodes
+
 The functions `car` and `cdr` access the first and second slots of a pair.
 
   (car (cons x y)) => x
   (cdr (cons x y)) => y
+
+  car and cdr can be like 2 points of a nodes, e.g the value and a pointer to the next node?
+  (cons 1 (cons 2 ( cons 3 null))) <-- list
 
 A list is either:
 
@@ -198,17 +251,23 @@ Useful functions:
 
 (define lst4 (cons 1 (cons "hello" (cons #t '()))))
 
-(define lst5 (list 1 "hello" #t))
+; caddr = car, cdr,cdr
+
+(define lst5 (list 1 "hello" #t)) ;function
+;'( 1 2 (+ 2 3)) = output the same however,
+;if we use the list function (list 1 2 (+ 2 3)) = '(1 2 5)
 
 (define lst6 '(1 "hello" #t))
 
 (define lst7 '(1 "hello" #t . ()))
 
-#; (define lst8 (list 1 (2 3) ((4 5) (6 7)))) ; what's wrong with this?
+#; (define lst8 (list 1 (2 3) ((4 5) (6 7)))) ; what's wrong with this? It will try to evalute the internal brackets
 
 (define lst9 '(1 (2 3) ((4 5) (6 7))))
 
 (define lst10 '(a (b (c d) (e f)) g))
+
+(define lst11 (cons 1( cons (cons 2 (cons 3 '()))(cons 4 '()))))
 
 
 
