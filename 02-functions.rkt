@@ -15,9 +15,9 @@
              (println z)
              (* x (+ y z))))
 
-(define (f3 x) (add1 x))
+(define (f3 x) (add1 x)) ;same as f1
 
-(define (f4 x y z)
+(define (f4 x y z) ;same as f2
   (println x)
   (println y)
   (println z)
@@ -74,8 +74,8 @@
 
 (define (say-hi-1 name)
   (if (equal? name "Jane")
-      (println "Me Tarzan!")
-      (printf "Hello, ~a~n" name))) ; `printf` does interpolation/formatting
+      (println "Me Tarzan!") ;then
+      (printf "Hello, ~a~n" name))) ;else ; `printf` does interpolation/formatting
 
 
 ;; digression: equality testing
@@ -92,9 +92,9 @@
   ;; `eq?` for pointer comparison
   (eq? 'a 'a)
   (eq? "hello world" "hello world")
-  (eq? '(a b c) '(a b c))
+  (eq? '(a b c) '(a b c)) ; not eqaul because of memory reason
   (let ([lst '(a b c)])
-    (eq? lst lst)))
+    (eq? lst lst))) ;create lst in var "lst" and compare lst with "lst"
 
  (list
   ;; `equal?` for value comparison
@@ -120,10 +120,10 @@
 
 (define (say-hi-4 name)
   ;; `cond` is a multi-way branch
-  (cond [(equal? name "Jane")
-         (println "Me Tarzan!")]
-        [(regexp-match? #rx"^Jan.*" name)
-         (printf "You ~a?~n" name)]
+  (cond [(equal? name "Jane") ;if 
+         (println "Me Tarzan!")] ;then
+        [(regexp-match? #rx"^Jan.*" name) ;if
+         (printf "You ~a?~n" name)] ;then
         [else
          (printf "Hello, ~a~n" name)]))
 
@@ -138,7 +138,7 @@
 
 (define (say-hi-6 name)
   ;; `match` is a general purpose pattern matcher with its own special language
-  (match name
+  (match name ;compares data/value with "shape"
     ["Jane" (println "Me Tarzan!")]
     [(regexp #rx"^Jan.*") (println "Me Tarzan?")]
     [(? string?) (printf "Hello, ~a~n" name)]
