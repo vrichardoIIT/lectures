@@ -20,7 +20,8 @@ Some useful built-in HOFs and related functions:
 -----------------------------------------------------------------------------|#
 
 ;; `apply` applies a function to lists
-
+(define (sum . ns)
+  (* 2 (apply + ns)))
 
 ;; `curry` gives us partial application
 

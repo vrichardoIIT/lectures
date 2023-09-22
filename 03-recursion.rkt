@@ -93,4 +93,11 @@
 
 
 (define (range n)
-  (void))
+  (let rec ([i 0])
+    (if (= i n)
+        '()
+        (cons i (rec (add1 i))))))
+
+  
+
+  ;(range 5) => '(0 1 2 3 4 5)
