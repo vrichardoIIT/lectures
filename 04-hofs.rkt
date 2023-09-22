@@ -20,16 +20,54 @@ Some useful built-in HOFs and related functions:
 -----------------------------------------------------------------------------|#
 
 ;; `apply` applies a function to lists
-(define (sum . ns)
+(apply + '(1 2 3 4))
+
+(apply + 1 2 '(3 4 ))
+
+(apply cons '( 1 2 ))
+
+(define (sum1 . xs)
+  (apply + xs))
+
+
+(define (sum . ns) ; the dot indicates that ns is a rest argument (takes argument of a list and "unpacks" it)
   (* 2 (apply + ns)))
 
 ;; `curry` gives us partial application
+(define conswith3 (curry cons 3)) ;takes first arg then cons with 3, '(n . 3)
 
+(define (arity-of-3 x y z) ;(y+z) * x
+  (* x (+ y z)))
+
+(define foo (curry arity-of-3 5)) ;*y +z )* 5
+
+(define (flip f)
+  (lambda (x y) (f y x)))
+
+(define conswith3.2 (curry (flip cons) 3));takes second arg and cons 3 with that
+    
+;((flip cons) 1 2 ), this will take cons as an arg then 1 = x and 2 =y , cons y x will flips anf give '(y . x)
 
 ;; compose is a simple but powerful form of "functional "glue"
+((compose sqrt abs) -4) ;== (sqrt(abs -4))
 
+(define (mycompose f g); (f . g)(x) = f(g(x))
+ (lambda (x)
+   (f (g x))))
+
+(define even?
+  (mycompose
+   (curry = 0)
+   (curry(flip remainder) 2)))
+ 
 
 ;; eval is like having access to the Racket compiler in Racket!
+(define (myif test e1 e2) ;test will be the condition in list form, e1 will be like true, e2 will be false
+ (eval `(cond (,test, e1) ;coma to evaluate
+         (else, e2))))
+
+(define (3times e)
+  (eval `(begin ,e ,e ,e))) ;the 'begin' keyword is use to put stuff together.
 
 
 
@@ -44,6 +82,13 @@ Some useful built-in HOFs and related functions:
 
 - `foldl`: like `foldr`, but folds from the left; tail-recursive
 -----------------------------------------------------------------------------|#
+(define (map f l)
+  (if (empty? l)
+      '()
+      (cons (f (first l));construct a new list, where each element is the result of applying f to an element in l
+            (map f (rest l)))))
+      
+
 
 ;; `map` examples
 #; (values
@@ -52,7 +97,11 @@ Some useful built-in HOFs and related functions:
    (map (curry * 2) (range 10))
  
    (map string-length '("hello" "how" "is" "the" "weather?")))
-
+(define (filter p l)
+  (cond [(empty? l) '()]
+        [(p (first l)) (cons (first l)
+                             (filter p (rest1)))]
+        [else (filter p (cons (rest l)))]))
 
 ;; `filter` examples
 #; (values 
