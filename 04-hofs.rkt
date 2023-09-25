@@ -165,7 +165,7 @@ it will then replace '() with 0 and cons with + as we recurse back!
 (define (foldl f acc lst)
   (if (empty? lst)
       acc
-      (foldl f (cons (first lst) acc) (rest lst))))
+      (foldl f (f (first lst) acc) (rest lst))))
 
 
 
@@ -185,13 +185,14 @@ it will then replace '() with 0 and cons with + as we recurse back!
 (define sum3 (curry foldl + '()))
 (define reverse (curry foldl cons  '()))
 
+
 (define (partition x lst)
   (foldl (lambda (y acc)
-         (if (< y x)
-             (list (cons y (first acc))
-                   (second acc))
-             (list (first acc)
-                   (cons y (second acc)))))
+           (if (< y x)
+               (list (cons y (first acc))
+                     (second acc))
+               (list (first acc)
+                     (cons y (second acc)))))
          '(() ())
          lst))
  
@@ -204,3 +205,35 @@ it will then replace '() with 0 and cons with + as we recurse back!
 
 - This leads to one of the most important ideas we'll see: the *closure*
 -----------------------------------------------------------------------------|#
+
+(define (simple n)
+  (let ([loc 10])
+    (+ n loc)))
+
+(define (weird n)
+  (let ([loc n])
+    (lambda ()
+      (println loc))))
+
+(define (weird2 n)
+  (lambda ()
+    (println n)))
+
+(define (make-adder n)
+  (lambda (x) (+ x n)))
+
+(define (make-obj) 
+  (let  ([attr 0]) ;attirbute
+    (lambda (cmd) ;command
+      (case cmd
+        ['inc (set! attr (add1 attr))] ;command 1 
+        ['dec (set! attr (sub1 attr))] ;kinda like method calls 
+        ['show (println attr)])))) ;kinda like getter
+
+#|
+functions can hang on to a value that is given to them, continue to use them. kinda like an object.
+
+
+
+|#
+
