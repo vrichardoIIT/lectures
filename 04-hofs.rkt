@@ -82,6 +82,7 @@ Some useful built-in HOFs and related functions:
 
 - `foldl`: like `foldr`, but folds from the left; tail-recursive
 -----------------------------------------------------------------------------|#
+;map
 (define (map f l)
   (if (empty? l)
       '()
@@ -97,10 +98,12 @@ Some useful built-in HOFs and related functions:
    (map (curry * 2) (range 10))
  
    (map string-length '("hello" "how" "is" "the" "weather?")))
+
+;filter
 (define (filter p l)
   (cond [(empty? l) '()]
         [(p (first l)) (cons (first l)
-                             (filter p (rest1)))]
+                             (filter p (rest 1)))]
         [else (filter p (cons (rest l)))]))
 
 ;; `filter` examples
@@ -115,9 +118,20 @@ Some useful built-in HOFs and related functions:
              ("see" "you" "later")
              ("hi" "med" "low")
              ("hello" "there"))))
+;foldr (reduce)
+(define (foldr f val lst) ;f = a function, val = base case, lst = lst
+  (if (empty? lst)
+      val
+      (f (first lst) (foldr f val (rest lst)))))
+  
+;looking at function sum2 and copylst we can see that foldr here iss just a generalize version of those function
+#| visualization of foldr sum
+(cons 0(cons 1(cons 2 (cons 3 '())))), '() is the basecase
+it will then replace '() with 0 and cons with + as we recurse back!
 
 
-;; `foldr` examples
+|#
+;; `foldr` examples (fold right)
 #; (values
     (foldr + 0 (range 10))
 
@@ -125,12 +139,38 @@ Some useful built-in HOFs and related functions:
 
     (foldr cons '(a b c d e) (range 5))
 
-    (foldr (lambda (x acc) (cons x acc)) ; try trace-lambda
-           '()
-           (range 5)))
+    (foldr (trace-lambda (x acc) (cons x acc)) ; try trace-lambda
+           '() (range 5)))
+
+#;(define (sum2 lst)
+  (if (empty? lst)
+      0
+      (+ (first lst) (sum2 (rest lst)))))
+
+(define sum2 (curry foldr + 0))
+
+(trace sum2)
+
+#;(define (foo2 lst) ;basically a copy function in this imp
+  (if (empty? lst)
+      '()
+      (cons (first lst) (foo2 (rest lst)))))
+
+(define copylst (curry foldr cons '()))
+
+(define (concatenate l1 l2)
+  (foldr cons l2 l1))
+
+;foldl
+(define (foldl f acc lst)
+  (if (empty? lst)
+      acc
+      (foldl f (cons (first lst) acc) (rest lst))))
 
 
-;; `foldl` examples
+
+
+;; `foldl` examples (fold left)
 #; (values
     (foldl + 0 (range 10))
     
@@ -142,7 +182,19 @@ Some useful built-in HOFs and related functions:
            '()
            (range 5)))
 
+(define sum3 (curry foldl + '()))
+(define reverse (curry foldl cons  '()))
 
+(define (partition x lst)
+  (foldl (lambda (y acc)
+         (if (< y x)
+             (list (cons y (first acc))
+                   (second acc))
+             (list (first acc)
+                   (cons y (second acc)))))
+         '(() ())
+         lst))
+ 
 
 #|-----------------------------------------------------------------------------
 ;; Lexical scope
