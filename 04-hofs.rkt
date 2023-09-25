@@ -233,6 +233,8 @@ it will then replace '() with 0 and cons with + as we recurse back!
 #|
 functions can hang on to a value that is given to them, continue to use them. kinda like an object.
 
+life time of a varibale is tied to the function that is refering back to them
+the function closes over the variables
 
 
 |#
