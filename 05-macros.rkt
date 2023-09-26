@@ -10,21 +10,23 @@
 - syntax objects attach syntactical context to sexps
 ------------------------------------------------------------------------------|#
 
-(define s1 (syntax "hello world"))
+(define s1 (syntax "hello world")) ;contextual infomation on the string 'hello world'
 
-(define s2 (syntax (foo bar 1 2 3)))
+(define s2 (syntax (foo bar 1 2 3))) ;a special form, if syntax is a function it would need to evaluate foo first
 
 (define s3 #'(foo bar 1 2 3)) ; #' is shorthand for `syntax`
 
 (define s4 #'(if (< 1 2) "true" "false"))
 
-(define s5 #`(if #,(< 1 2) "true" "false"))
+(define s5 #`(if #,(< 1 2) "true" "false")) ; "#`" acts as a quasiquote, and will evaluate (< 1 2 ) in this case 
 
-#; (values
+ (values
     (syntax-source s3)
-    (syntax-line s3)
+    (syntax-line s3) ; where the code is, here line 
     (syntax-column s3)
-    (syntax->datum s3))
+    (syntax->datum s3)) ;gives body of special form
+
+; '(foo bar 1 2 3)) ->datum foo = 1st element of list, 2nd bar, 3rd 1, ....
 
 ;; `eval-syntax` evaluates syntax objects, like `eval` for sexps
 
@@ -34,29 +36,38 @@
 
 #|------------------------------------------------------------------------------
 ;; Syntax transformers, aka "Macros"
+
+Takes a syntax object then manipulate it in some ways, returning a new syntax object and evalaute
+
+
 ------------------------------------------------------------------------------|#
 
 ;; `define-syntax` defines a macro
 
 (define-syntax say-hi
   (lambda (stx) ; `stx` refers to the original syntax object 
-    #`(quote (hi #,stx))))
+    #`(quote (hi #,stx)))) 
 
 
 (define-syntax (say-hi2 stx) ; alternate form
   #`(quote (hi #,stx)))
 
-
+;prefix => (+ x y)
 ;; define a macro that supports infix notation (for binary functions)
 (define-syntax (infix stx)
-  (void))
+  (let ([infix-exp (second (syntax->datum stx))])
+    #`(#,(second infix-exp) #,(first infix-exp) #,(third infix-exp)))) 
 
 #; (syntax->datum (expand-once #'(infix (2 * 3))))
 
 
 ;; define our own `if` special form (based on cond)
 (define-syntax (my-if stx)
-  (void))
+  (let ([datum (syntax->datum stx)])
+    #`(cond [#,(second datum) #,(third datum)]
+            [else #, (fourth datum)])))
+
+;(my-if (< 1 2) (println "yes") (println "no"))
 
 #; (syntax->datum
     (expand-once #'(my-if (< 1 2)
@@ -73,7 +84,8 @@
 (define-syntax (infix2 stx)
   (syntax-case stx ()
     [(_ (lhs op rhs))
-     #'(op lhs rhs)]))
+     ;(infix (1 + 2)) here inflix = _, 1hs = 1, ops = +, and rhs = 2, 
+     #'(op lhs rhs)])) ;then change and evalute in the form (+ lhs rhs)
 
 
 (define-syntax (my-if-2 stx)
@@ -110,16 +122,21 @@
 
 ;; define a macro that implements a loop
 (define-syntax-rule (loop n body)
-  (void))
-
+  (let rec ([i 0])
+    (when (< i n)
+      body
+      (rec (add1 i)))))
 ;; can we interact with the `i` introduced in the `loop` macro from "outside"?
-#; (loop 10 (println i))
-#; (let ([i 10]) (loop i (println i)))
+#; (loop 10 (println i)) ;error 
+#; (let ([i 10]) (loop i (println i))) ;will print 10, 10times
 
 
 ;; define a macro that implements a "for" loop, exposing the iterator var
 (define-syntax-rule (for-loop var n body)
-  (void))
+  (let rec ([var 0])
+    (when (< var n)
+      body
+      (rec (add1 var)))))
 
 
 
@@ -183,7 +200,12 @@
 
 ;; can you "fix" this? (need to manually break hygiene)
 (define-syntax (aif-2 stx)
-  (void))
+  (let ([sexp (syntax->datum stx)])
+    (datum->syntax stx
+                   `(let ([it ,(second sexp)])
+                      (if it
+                          ,(third sexp)
+                          ,(fourth sexp))))))
 
 
 ;; still not perfect!
