@@ -11,7 +11,7 @@ Gabby 0
 
 -- Game 2
 Eric -25
-Molly +25
+Molly +25R
 Anna -70
 Sam +70
 

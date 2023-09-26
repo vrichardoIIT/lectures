@@ -13,8 +13,20 @@ been using is actually shorthand for a `module` declaration.
 -----------------------------------------------------------------------------|#
 
 ;; E.g., a standalone module
-(module foo racket)
+(module
+    foo ;module name
+  racket ;evaluator/ initial import
 
+  (provide bar)
+
+  (define (bar)
+    (println "hello bar"))
+
+  (define (bas)
+    (println "hello bas"))
+  )
+
+(require 'foo)
 
 
 #|-----------------------------------------------------------------------------
@@ -54,7 +66,15 @@ So what *really* happens when we load a source file into a Racket interpreter?
 
 ;; Implement a reader & expander for the "program" in 06-lang-demo.rkt
 
+#;(port->line (open-input-file "06-lang-demo.rkt"))
 
+(provide read-syntax)
+(define (read-syntax path port)
+  (let* ([src-lines (filter non-empty-string?
+                            (map string-trim (port->lines port)))])
+    (datum->syntax #f
+                   `(module demo racket
+                      @src-lines))))
 
 #|-----------------------------------------------------------------------------
 ;; Interposition points
