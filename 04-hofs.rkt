@@ -92,12 +92,12 @@ Some useful built-in HOFs and related functions:
 
 
 ;; `map` examples
-#; (values
+ (values
    (map add1 (range 10))
 
    (map (curry * 2) (range 10))
- 
-   (map string-length '("hello" "how" "is" "the" "weather?")))
+
+   (map string-length '("hello" "how"  "is" "the" "weather?")))
 
 ;filter
 (define (filter p l)
