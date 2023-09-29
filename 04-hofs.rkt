@@ -103,7 +103,7 @@ Some useful built-in HOFs and related functions:
 (define (filter p l)
   (cond [(empty? l) '()]
         [(p (first l)) (cons (first l)
-                             (filter p (rest 1)))]
+                             (filter p (rest l)))]
         [else (filter p (cons (rest l)))]))
 
 ;; `filter` examples
