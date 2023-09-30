@@ -30,7 +30,8 @@
 
 ;; `eval-syntax` evaluates syntax objects, like `eval` for sexps
 
-#; (eval-syntax s4)
+#; (eval-syntax s5)
+
 
 
 

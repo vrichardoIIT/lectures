@@ -224,10 +224,10 @@ it will then replace '() with 0 and cons with + as we recurse back!
 
 (define (make-obj) 
   (let  ([attr 0]) ;attirbute
-    (lambda (cmd) ;command
+    (lambda (cmd) ;command: controls what happens to the attribute
       (case cmd
-        ['inc (set! attr (add1 attr))] ;command 1 
-        ['dec (set! attr (sub1 attr))] ;kinda like method calls 
+        ['inc (set! attr (add1 attr))] ;increament 
+        ['dec (set! attr (sub1 attr))] ;decrement -these are like setter
         ['show (println attr)])))) ;kinda like getter
 
 #|
