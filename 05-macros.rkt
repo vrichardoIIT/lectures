@@ -127,10 +127,10 @@ Takes a syntax object then manipulate it in some ways, returning a new syntax ob
     (when (< i n)
       body
       (rec (add1 i)))))
+
 ;; can we interact with the `i` introduced in the `loop` macro from "outside"?
 #; (loop 10 (println i)) ;error 
-#; (let ([i 10]) (loop i (println i))) ;will print 10, 10times
-
+#; (let ([i 10]) (loop i (println i))) ;will print 10, 10times the i that is implemented in the code is not the same with the i in loop
 
 ;; define a macro that implements a "for" loop, exposing the iterator var
 (define-syntax-rule (for-loop var n body)
@@ -138,7 +138,7 @@ Takes a syntax object then manipulate it in some ways, returning a new syntax ob
     (when (< var n)
       body
       (rec (add1 var)))))
-
+;
 
 
 #|------------------------------------------------------------------------------
@@ -157,11 +157,12 @@ Takes a syntax object then manipulate it in some ways, returning a new syntax ob
 
 #; (values
     (hygienic)
-    (let ([x 10]) (hygienic)))
+    (let ([x 10]) (hygienic))) ;will use 440 and fail to find the new x
 
 (define-syntax (hygienic2 stx)
   #'(define foo 440))
 
+;foo is undefine
 
 ;; but `datum->syntax` allows us to "break" hygiene by inheriting the lexical
 ;; context of some other syntax object (e.g., from the call site)
@@ -192,7 +193,7 @@ Takes a syntax object then manipulate it in some ways, returning a new syntax ob
 
 
 ;; what's wrong with the following attempt?
-(define-syntax-rule (aif test exp1 exp2)
+(define-syntax-rule (aif test exp1 exp2) ;hygenic, 'it' is undefine at call site
   (let ([it test])
     (if it
         exp1

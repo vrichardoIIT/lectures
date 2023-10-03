@@ -1,4 +1,4 @@
-#lang reader "06-lang.rkt"
+#lang reader "06-lang.rkt" ; a reader for 06-lang.rkt
 
 -- Game 1
 Molly +50

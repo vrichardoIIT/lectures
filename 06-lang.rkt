@@ -13,20 +13,20 @@ been using is actually shorthand for a `module` declaration.
 -----------------------------------------------------------------------------|#
 
 ;; E.g., a standalone module
-(module
+#;(module
     foo ;module name
   racket ;evaluator/ initial import
 
-  (provide bar)
+  (provide bar) ;export function using the 'provide' special form, 
 
   (define (bar)
-    (println "hello bar"))
+    (println "hello bar")) ;definition/function
 
   (define (bas)
     (println "hello bas"))
   )
 
-(require 'foo)
+#;(require 'foo);if we want to use this module when need to use 'require'
 
 
 #|-----------------------------------------------------------------------------
@@ -38,7 +38,7 @@ So what *really* happens when we load a source file into a Racket interpreter?
   Racket where to find the language's **reader**.
 
 - The reader's job is to read in code from the source file and convert it into
-  syntax objects
+  syntax objects (scanner, a bit of a parcer)
 
 - The top-level syntax object returned by the reader is a `module` which:
 
@@ -64,17 +64,57 @@ So what *really* happens when we load a source file into a Racket interpreter?
 - The Reader and Expander give us everything we need to create new languages!
 -----------------------------------------------------------------------------|#
 
-;; Implement a reader & expander for the "program" in 06-lang-demo.rkt
+;; Implement a reader & expander for the "program" in 06-lang-demo.rkt (basic I/O)
 
-#;(port->line (open-input-file "06-lang-demo.rkt"))
+#;(open-input-file "06-lang-demo.rkt") ;open file - return input port
+#; (port->lines (open-input-file "06-lang-demo.rkt")) ;reads content of file in a string
 
-(provide read-syntax)
-(define (read-syntax path port)
-  (let* ([src-lines (filter non-empty-string?
-                            (map string-trim (port->lines port)))])
-    (datum->syntax #f
-                   `(module demo racket
-                      @src-lines))))
+;file to port automatically
+(provide read-syntax) ;make file a reader
+(define (read-syntax path port) ;path to file and port to file, return syntac object
+
+  (define (non-comment? line) ;take line and return true if not a comment
+    (and (non-empty-string? line) ;not an empty string 
+         (not (string-prefix? line "--")))) ;doesn't start with the "--" prefix
+
+  (define (make-form line)
+    (let ([lst (string-split line)])
+      `(update ,(first lst) ,(string->number (second lst))))) ;use update, racket expender will not let, change expander to "06-lang.rkt" which will make it a reader and scaner
+  
+  (let* ([src-lines (filter non-comment? ;filter non empty strings, we can change non-empty-string? with non-comment?
+                            (map string-trim (port->lines port)))]) ;convert port to line, trim empty lines at the end
+    (datum->syntax #f ;return corrisponding systax object
+                   `(module demo ;name
+                      "06-lang.rkt" ;expander
+                      ,@(map make-form src-lines)
+                      players)))) ;,@ is like the python unpacking  ,@src-lines
+
+(provide update players) 
+
+
+(define players (make-hash)) ;mutable
+
+
+(define (update name val)
+  (hash-set! players
+             name ;key
+             (+ val (hash-ref players name 0) ;defult value
+                               )))
+#|
+(make-hash) creates hashtables (mutable)
+(hash-set! hashtable key value) change mutable hashtable
+
+
+(hash) immutable
+
+(hash-update hashtable key function val)
+
+
+(hash-ref hashtable key val) get value
+|#
+
+
+
 
 #|-----------------------------------------------------------------------------
 ;; Interposition points
