@@ -89,17 +89,16 @@ So what *really* happens when we load a source file into a Racket interpreter?
                       ,@(map make-form src-lines)
                       players)))) ;,@ is like the python unpacking  ,@src-lines
 
-(provide update players) 
-
-
-(define players (make-hash)) ;mutable
+(define players (make-hash))
 
 
 (define (update name val)
-  (hash-set! players
-             name ;key
-             (+ val (hash-ref players name 0) ;defult value
-                               )))
+  (hash-set! players name (+ val (hash-ref players name 0))))
+
+
+(provide update players)
+
+
 #|
 (make-hash) creates hashtables (mutable)
 (hash-set! hashtable key value) change mutable hashtable
