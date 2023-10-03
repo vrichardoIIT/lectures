@@ -135,24 +135,24 @@ So what *really* happens when we load a source file into a Racket interpreter?
                       players))))
 
 
-(define players (make-hash))
+;(define players (make-hash))
 
 
-(define (update name val)
-  (hash-set! players name (+ val (hash-ref players name 0))))
+#;(define (update name val)
+ (hash-set! players name (+ val (hash-ref players name 0))))
 
 
-(provide update players)
+;(provide update players)
 
 
-#; ;; Version 5
-(define (read-syntax path port)
+ ;; Version 5
+#;(define (read-syntax path port)
   (define (non-comment? line)
     (and (non-empty-string? line)
          (not (string-prefix? line "--"))))
 
-  (define (make-form lines)
-    (for/fold ([acc '(hash)])
+  (define (make-form lines) ;takes all the line
+    (for/fold ([acc '(hash)]) ;folds over them
               ([l lines])
       (match-let ([(list name val) (string-split l)])
         `(hash-update ,acc ,name (curry + ,val) 0))))
@@ -163,6 +163,7 @@ So what *really* happens when we load a source file into a Racket interpreter?
     (datum->syntax #f
                    `(module demo racket
                       (quote ,(make-form src-lines))))))
+
 
 
 #; ;; Version 6
@@ -184,7 +185,7 @@ So what *really* happens when we load a source file into a Racket interpreter?
                    `(module demo "06-lang.rkt"
                       ,(make-form src-lines)))))
 
-(provide hash hash-update curry + string->number)
+(provide hash hash-update curry +)
 
 
 ;; Version 7
@@ -206,10 +207,10 @@ So what *really* happens when we load a source file into a Racket interpreter?
                    `(module demo "06-lang.rkt"
                       (check-balance ,(make-form src-lines))))))
 
-(define (check-balance ht)
+(define (check-balance ht) ;adds all value in hashtable and check if its 0
   (if (= 0 (apply + (hash-values ht)))
       ht
-      (values ht "Wins/Losses aren't balanced!")))
+      (values ht "Wins/Losses aren't balanced!"))) ;else show that wins and lost aren't balance
 
 (provide check-balance)
 
