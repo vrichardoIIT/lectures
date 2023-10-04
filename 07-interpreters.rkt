@@ -162,36 +162,38 @@ The string will be turned to a sexp using reader then the sexp is fed to the par
 -----------------------------------------------------------------------------|#
 
 ;; Interpreter, essential a pattern matching that decorted syntax trees
-(define (eval expr [env '()]) ;env = environment a variable must have a val which is in the environment, variable binding
-  (match expr
-    [(int-exp val) val]
-    [(arith-exp "plus" lhs rhs) (+ (eval lhs [env '()]) (eval rhs [env '()]))]
-    [(arith-exp "times" lhs rhs) (+ (eval lhs [env '()]) (eval rhs [env '()]))]
-    [(var-exp e) (let ([pair (assoc id env)]) ; assoc takes a list of pairs and an id that match that id to find the pair, (assoc 'x '((x . 10) (y . 20))) return '(x . 10)
-                    (if pair
-                        (cdr pair);gets value
-                        (error (format "~ a not bound" id))))]
-   #; [(let-exp (list (var-exp id)) ;single let
-              (list val)
-              body)
-     (let ([new-env (append (cons id (eval val env)) env)])
-     (eval body new-env))]
+(define (eval expr)
+  (let eval-env ([expr expr]
+                 [env '()])
+    (match expr
+      ;; arithmetic
+      [(int-exp val) val]
+      [(arith-exp "PLUS" lhs rhs)
+       (+ (eval-env lhs env) (eval-env rhs env))]
+      [(arith-exp "TIMES" lhs rhs)
+       (* (eval-env lhs env) (eval-env rhs env))]
 
-    
-                    
+      ;; variable binding
+      #; [(var-exp id)
+          (cdr (assoc id env))]
 
-    [(let-exp (list (var-exp id) ...)
-              (list val ...)
-              body)
-     (let ([vars (map cons
-                      id
-                      (map (lambda (v) (eval v env)) val))])
-       (eval body (append vars env)))]
+      ;; variable binding with error handling
+      [(var-exp id)
+       (let ([pair (assoc id env)])
+         (if pair (cdr pair) (error (format "~a not bound!" id))))]
 
-    ))
-   
-     
+      ;; let expression with a single variable
+      #; [(let-exp (list (var-exp id)) (list val) body)
+          (eval-env body (cons (cons id (eval-env val env)) env))]
 
+      ;; let expression with multiple variables
+      [(let-exp (list (var-exp id) ...) (list val ...) body)
+       (let ([vars (map cons id
+                        (map (lambda (v) (eval-env v env)) val))])
+         (eval-env body (append vars env)))]
+      
+      ;; basic error handling
+      [_ (error (format "Can't evaluate: ~a" expr))])))
 
     
 #|
