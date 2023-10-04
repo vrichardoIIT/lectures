@@ -23,18 +23,20 @@
 
 
 ;; define a `doohickey` type that is a sub-type of `widget`
-(struct doohickey widget (special-power) #:transparent)
+(struct doohickey widget (special-power) #:transparent) ;doohickey is a try of widget with a "speacial power"(new atteribute)
 
 (define d1 (doohickey "thingamajig" "thinging" 199.99 "time travel"))
+;(define d1 (doohickey 'name' 'purpose' 'price' 'extra atteribute'))
 
 ;; we can also match against structs
 (define (which-widget? w)
-  (match w
-    [(widget "wrench" _ _) "It's a wrench!"]
+  (match w ;pattern matching construct ((pattern matching expertion) return)
+    [(widget "wrench" _ _) "It's a wrench!"] ;if w is a widget and first arg "wrench" return "its a wrench"
     [(doohickey "thingamajig" _ _ _) "It's a thingamajig!"]
-    [(? widget?) "It's some sort of widget"]
-    [_ "I don't know what this is"]))
-
+    [(? widget?) "It's some sort of widget"] ;apply a predicate (T/F)
+    [_ "I don't know what this is"])) ;else
+;_ is used for saying an arg should be here but we dont care about it
+;finds the first pattern match that works
 
 
 #|-----------------------------------------------------------------------------
@@ -95,8 +97,13 @@ Review: What is parsing?
 -----------------------------------------------------------------------------|#
 
 ;;; using Racket's reader
-#; (read)
+#; (read) ;read function knows how to read sexp syntax 
+;takes a port
+#; (read p1) ;error
+#;(read (open-input-string p1)) ;return sexp
 
+(define (read-string str)
+  (read (open-input-string str)))
 
 
 #|-----------------------------------------------------------------------------
@@ -112,21 +119,39 @@ Review: What is parsing?
 ;;; Some types for decorating our syntax tree
 
 ;; integer value
-(struct int-exp () #:transparent)
+(struct int-exp (val) #:transparent) ;val is the interger value
 
 ;; arithmetic expression
-(struct arith-exp () #:transparent)
+(struct arith-exp (op lhs rhs) #:transparent) ;op (+/*) lhs = 1st arg and rhs = 2nd arg e.g (+ 2 3)
 
 ;; variable
-(struct var-exp () #:transparent)
+(struct var-exp (id) #:transparent)
 
 ;; let expression
-(struct let-exp () #:transparent)
+(struct let-exp (ids val body) #:transparent) ;let ([id val]... body))
 
 
 ;; Parser
-(define (parse sexp)
-  (void))
+(define (parse sexp) 
+  (match sexp
+    [(? integer?) ;is it an int
+     (int-exp sexp)]
+    [(list '+ lhs rhs) ;is it a string of the form (+ lhs rhs)
+     (arith-exp "plus" (parse lhs) (parse rhs))]
+     [(list '* lhs rhs) 
+     (arith-exp "times" (parse lhs) (parse rhs))]
+    [(? symbol?)(var-exp sexp)]
+    []
+
+
+
+
+    ))
+#|
+The string will be turned to a sexp using reader then the sexp is fed to the parser to become a decorated syntax tree
+
+
+|#
 
 
 #|-----------------------------------------------------------------------------
@@ -135,6 +160,21 @@ Review: What is parsing?
 - The interpreter's job is the take the (decorated) syntax tree and evalute it!
 -----------------------------------------------------------------------------|#
 
-;; Interpreter
-(define (eval expr)
-  (void))
+;; Interpreter, essential a pattern matching that decorted syntax trees
+(define (eval expr [env '()]) ;env = environment a variable must have a val which is in the environment
+  (match expr
+    [(int-exp val) val]
+    [(arith-exp "plus" lhs rhs) (+ (eval lhs [env '()]) (eval rhs [env '()]))]
+    [(arith-exp "times" lhs rhs) (+ (eval lhs [env '()]) (eval rhs [env '()]))]
+    [(var-exp id) (let ([pair (assoc id env)]) ; assoc takes a list of pairs and an id that match that id to find the pair, (assoc 'x '((x . 10) (y . 20))) return '(x . 10)
+                    (if pair
+                        (cdr pair)
+                        (error (format "~ a not bound" id))))]
+
+
+    ))
+
+(define (repl)
+  (let ([stx (parse (read))])
+    (println (eval stx))
+    (repl)))
