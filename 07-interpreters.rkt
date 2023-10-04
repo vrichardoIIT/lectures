@@ -167,10 +167,10 @@ The string will be turned to a sexp using reader then the sexp is fed to the par
                  [env '()])
     (match expr
       ;; arithmetic
-      [(int-exp val) val]
-      [(arith-exp "PLUS" lhs rhs)
-       (+ (eval-env lhs env) (eval-env rhs env))]
-      [(arith-exp "TIMES" lhs rhs)
+      [(int-exp val) val] ;if in the form int-exp val return val
+      [(arith-exp "plus" lhs rhs) ;if in form "plus" lhs rhs
+       (+ (eval-env lhs env) (eval-env rhs env))] ;evalute + (rec lhs) (rec rhs) = + arg1 arg2
+      [(arith-exp "times" lhs rhs) ;same
        (* (eval-env lhs env) (eval-env rhs env))]
 
       ;; variable binding
@@ -178,19 +178,21 @@ The string will be turned to a sexp using reader then the sexp is fed to the par
           (cdr (assoc id env))]
 
       ;; variable binding with error handling
-      [(var-exp id)
+      [(var-exp id) ;if variable symbol
        (let ([pair (assoc id env)])
-         (if pair (cdr pair) (error (format "~a not bound!" id))))]
+         (if pair (cdr pair) (error (format "~a not bound!" id))))] ;if symbol is in the enviroment return the value else error
 
       ;; let expression with a single variable
       #; [(let-exp (list (var-exp id)) (list val) body)
           (eval-env body (cons (cons id (eval-env val env)) env))]
 
       ;; let expression with multiple variables
-      [(let-exp (list (var-exp id) ...) (list val ...) body)
+      [(let-exp (list (var-exp id) ...) ;list of variable exp and its id
+                (list val ...) ;list of values
+                body)
        (let ([vars (map cons id
                         (map (lambda (v) (eval-env v env)) val))])
-         (eval-env body (append vars env)))]
+         (eval-env body (append vars env)))] ;append is used to maintain pervious environment (all of the scopes)
       
       ;; basic error handling
       [_ (error (format "Can't evaluate: ~a" expr))])))
@@ -198,7 +200,7 @@ The string will be turned to a sexp using reader then the sexp is fed to the par
     
 #|
 the let special form makes enviroment
-
+sexp?
 |#
 
 
