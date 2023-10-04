@@ -64,7 +64,7 @@ we can use `let` to bind identifiers to lambdas. E.g.,
 (struct let-exp (ids vals body) #:transparent)
 
 ;; lambda expression
-(struct lambda-exp () #:transparent)
+(struct lambda-exp (id body) #:transparent)
 
 ;; function application
 (struct app-exp () #:transparent)
