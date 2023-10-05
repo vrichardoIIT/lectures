@@ -8,9 +8,9 @@ language. Our functions will have exactly one formal parameter each.
 
 E.g.,
 
-- lambda definition: `(lambda (x) (+ x 1))`
+- lambda definition: `(lambda (x) (+ x 1))` ,takes a variable (x) and expression (+ x 1) which will make lambda a function 
 
-- function application: `((lambda (x) (+ x 1)) 10)`
+- function application: `((lambda (x) (+ x 1)) 10)`, takes the function (lambda) and give the variables a value 
 
 Though our language will not support named functions a la Racket's `define`,
 we can use `let` to bind identifiers to lambdas. E.g.,
@@ -64,10 +64,10 @@ we can use `let` to bind identifiers to lambdas. E.g.,
 (struct let-exp (ids vals body) #:transparent)
 
 ;; lambda expression
-(struct lambda-exp (id body) #:transparent)
+(struct lambda-exp (id body) #:transparent) ;id will be an var like 'x' and body is an expression
 
 ;; function application
-(struct app-exp () #:transparent)
+(struct app-exp (fn arg) #:transparent)
 
 
 ;; Parser
@@ -92,10 +92,12 @@ we can use `let` to bind identifiers to lambdas. E.g.,
      (let-exp (map parse id) (map parse val) (parse body))]
     
     ;; lambda expressions
-    [_ (void)]
+    [(list 'lambda (list id) body)
+       (lambda-exp id (parse body))]
 
     ;; function application
-    [_ (void)]
+    [(list fn arg)
+       (app-exp (parse fn) (parse arg))]
 
     ;; basic error handling
     [_ (error (format "Can't parse: ~a" sexp))]))
@@ -131,10 +133,17 @@ we can use `let` to bind identifiers to lambdas. E.g.,
          (eval-env body (append vars env)))]
 
       ;; lambda expression
-      [_ (void)]
+      [ (lambda-exp id body)
+        expr] ;nothing to do print out expr (our way of saying procedur)
       
       ;; function application
-      [_ (void)]
+      [(app-exp fn arg)
+       (match-let ([(lambda-exp id body) (eval-env arg env)]
+                   [argval (eval-env arg env)])
+       (eval-env body (cons (cons id arg-val) env)
+
+
+       ]
 
       ;; basic error handling
       [_ (error (format "Can't evaluate: ~a" expr))])))
