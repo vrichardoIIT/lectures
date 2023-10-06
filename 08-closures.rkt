@@ -104,7 +104,47 @@ we can use `let` to bind identifiers to lambdas. E.g.,
 
 
 ;; Interpreter
-(define (eval expr)
+(define (eval-lazy expr) ;lazy eval
+  (let eval-env ([expr expr]
+                 [env '()])
+    (match expr
+      ;; int literals
+      [(int-exp val) val]
+
+      ;; arithmetic expressions    
+      [(arith-exp "PLUS" lhs rhs)
+       (+ (eval-env lhs env) (eval-env rhs env))]
+      [(arith-exp "TIMES" lhs rhs)
+       (* (eval-env lhs env) (eval-env rhs env))]         
+
+      ;; variable binding
+      [(var-exp id)
+       (let ([pair (assoc id env)])
+         (if pair
+             (cdr pair)
+             (error (format "~a not bound!" id))))]
+
+      ;; let expression with multiple variables
+      [(let-exp (list (var-exp id) ...) (list val ...) body)
+       (let ([vars (map cons id val)])
+         (eval-env body (append vars env)))]
+
+      ;; lambda expression
+      [ (lambda-exp id body)
+        expr] ;nothing to do print out expr (our way of saying procedur)
+      
+      ;; function application
+      [(app-exp fn arg)
+       (match-let ([(lambda-exp id body) (eval-env fn env)] ;evaluate fn to make sure it returns a lambda expr
+       (eval-env body (cons (cons id argval) env))))]
+
+
+      
+
+      ;; basic error handling
+      [_ (error (format "Can't evaluate: ~a" expr))])))
+
+(define (eval expr) ;strict eval
   (let eval-env ([expr expr]
                  [env '()])
     (match expr
@@ -138,15 +178,16 @@ we can use `let` to bind identifiers to lambdas. E.g.,
       
       ;; function application
       [(app-exp fn arg)
-       (match-let ([(lambda-exp id body) (eval-env arg env)]
-                   [argval (eval-env arg env)])
-       (eval-env body (cons (cons id arg-val) env)
+       (match-let ([(lambda-exp id body) (eval-env fn env)] ;evaluate fn to make sure it returns a lambda expr
+                   [argval (eval-env arg env)]) ;evaluate arg to get argval
+       (eval-env body (cons (cons id argval) env)))
 
 
        ]
 
       ;; basic error handling
       [_ (error (format "Can't evaluate: ~a" expr))])))
+
 
 
 ;; REPL
