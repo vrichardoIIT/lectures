@@ -119,7 +119,7 @@ we can use `let` to bind identifiers to lambdas. E.g.,
       [(arith-exp "TIMES" lhs rhs)
        (* (eval-env lhs env) (eval-env rhs env))]         
 
-      ;; variable binding
+      ;; variable binding (LET expression)
       [(var-exp id)
        (let ([pair (assoc id env)])
          (if pair
@@ -130,19 +130,19 @@ we can use `let` to bind identifiers to lambdas. E.g.,
       [(let-exp (list (var-exp id) ...) (list val ...) body)
        (let ([vars (map cons id
                         (map (lambda (v) ; evaluate values at bind-time
-                               (eval-env v env))
+                               (eval-env v env)) ;evaluate let values
                              val))])
          (eval-env body (append vars env)))]
 
       ;; lambda expression
-      [(lambda-exp id body)
+      [(lambda-exp id body) ;return expression, this is like a special form
        (lambda-exp id body)] ; why don't we evaluate the body?
       
       ;; function application (in dynamic scope)
       [(app-exp f arg)
-       (match-let ([(lambda-exp id body) (eval-env f env)]
-                   [arg-val (eval-env arg env)]) ; call-by-value
-         (eval-env body (cons (cons id arg-val) env)))]
+       (match-let ([(lambda-exp id body) (eval-env f env)] ;evaluate the function first, make sure it matches the lambda exp
+                   [arg-val (eval-env arg env)]) ; call-by-value, eval argument and set to arg-val
+         (eval-env body (cons (cons id arg-val) env)))] 
 
       ;; basic error handling
       [_ (error (format "Can't evaluate: ~a" expr))])))
@@ -162,12 +162,12 @@ we can use `let` to bind identifiers to lambdas. E.g.,
       [(arith-exp "TIMES" lhs rhs)
        (* (eval-env lhs env) (eval-env rhs env))]         
 
-      ;; variable binding
+      ;; variable binding (LET)
       [(var-exp id)
        (let ([pair (assoc id env)])
          (if pair
              ;; evaluate when derefenced (not very efficient!)
-             (eval-env (cdr pair) env)
+             (eval-env (cdr pair) env) ; eval when binding variable
              (error (format "~a not bound!" id))))]
 
       ;; let expression with multiple variables
@@ -239,6 +239,7 @@ function a "closure".
 
       ;; lambda expression
       [(lambda-exp id body)
+       ;when we evaluate the lambda, save the current environment in th closure environment
        (fun-val id body env)] ; store current env in closure
       
       ;; function application (in lexical scope)
