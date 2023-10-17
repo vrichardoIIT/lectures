@@ -60,6 +60,7 @@ e.g., support for lambda and function application with > 1 params/args
 ;; integer value
 (struct int-exp (val) #:transparent)
 
+
 ;; arithmetic expression
 (struct arith-exp (op lhs rhs) #:transparent)
 
@@ -83,6 +84,7 @@ e.g., support for lambda and function application with > 1 params/args
     [(? integer?)
      (int-exp sexp)]
 
+
     ;; arithmetic expression
     [(list '+ lhs rhs)
      (arith-exp "PLUS" (parse lhs) (parse rhs))] 
@@ -98,11 +100,11 @@ e.g., support for lambda and function application with > 1 params/args
      (let-exp (map parse id) (map parse val) (parse body))]
     
     ;; lambda expression -- modified for > 1 params
-    [(list 'lambda (list ids ...) body)
+    [(list 'lambda (list ids ...) body) ;list of ids
      (lambda-exp ids (parse body))]
 
     ;; function application -- modified for > 1 args
-    [(list f args ...)
+    [(list f args ...) ;list of arg
      (app-exp (parse f) (map parse args))]
 
     ;; basic error handling
@@ -116,7 +118,7 @@ e.g., support for lambda and function application with > 1 params/args
      (arith-exp op (desugar lhs) (desugar rhs)))
 
     ((let-exp ids vals body)
-     (let-exp ids (map desugar vals) (desugar body)))
+     (let-exp ids (map desugar vals) (desugar body))) ; map to apply desuger to every vals in let exp
     
     ((lambda-exp ids body)
      (foldr (lambda (id body) (lambda-exp id body))
