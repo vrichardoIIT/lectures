@@ -64,7 +64,7 @@ A sexp is either an *atom* or a *list*.
 - A *list* is a sequence of sexps (recursive def!) separated by spaces, 
   enclosed by parentheses
 
-  - [] and {} can also be used as delimiters
+  - [] and {} can also be used as delimitersR
 -----------------------------------------------------------------------------|#
 
 ;; Let's write some (syntactically) valid sexps!
@@ -187,7 +187,7 @@ Define global variables with `define` and local variables with `let` and `let*`
 
 (define *course-id* "CS 440")  ; sometimes we use "earmuffs" for global vars
 
-(define bignum (expt 2 50))
+(define bignum (expt 2 50)) ;2^50
 
 ;; introducing local vars
 (define cnum (let ([x 10]
@@ -200,7 +200,7 @@ Define global variables with `define` and local variables with `let` and `let*`
 (define y (+ x (let ([x 20])
                  (+ (let ([x 30])
                       (* x 5))
-                    x))))
+                    x)))) ;30*5 + 20 + 10
 
 ;; find roots of x^2 + 3x - 4 = (x - 1)(x + 4) = 0
 ;;  - need let* to use earlier vars when defining later ones
@@ -270,11 +270,14 @@ Useful functions:
 
 (define lst7 '(1 "hello" #t . ()))
 
-#; (define lst8 (list 1 (2 3) ((4 5) (6 7)))) ; what's wrong with this?
+ #;(define lst8 (list 1 (2 3) ((4 5) (6 7)))) ; what's wrong with this?
 
 (define lst9 '(1 (2 3) ((4 5) (6 7))))
 
 (define lst10 '(a (b (c d) (e f)) g))
+
+;with list and cons you cannot put a list in like this (cons/list x (2 3))
+;will need to use ' (cons/list x '(2 3))
 
 
 
