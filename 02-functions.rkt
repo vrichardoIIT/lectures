@@ -7,15 +7,15 @@
 - `define` supports a special syntax for binding variables to functions
 -----------------------------------------------------------------------------|#
 
-(define f1 (lambda (x) (+ x 1)))
-
+(define f1 (lambda (x) (+ x 1))) ;(functionname (lambda var body))
+;(f1 var): (f1 4) = 5
 (define f2 (lambda (x y z)
              (println x)
              (println y)
              (println z)
              (* x (+ y z))))
 
-(define (f3 x) (add1 x))
+(define (f3 x) (add1 x)) ;(functionname var)
 
 (define (f4 x y z)
   (println x)
@@ -33,7 +33,9 @@
             (/ (- (- b) sqr-disc) (* 2 a)))))
 
 (define (test-quad-roots r1 r2)
-  (let ([a 1] [b (- (+ r1 r2))] [c (* r1 r2)]) ; based on (x + r1)(x + r2)
+  (let ([a 1]
+        [b (- (+ r1 r2))]
+        [c (* r1 r2)]) ; based on (x + r1)(x + r2)
     (let-values ([(rr1 rr2) (quad-roots a b c)])
       (println rr1)
       (println rr2))))
