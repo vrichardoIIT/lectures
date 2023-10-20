@@ -107,9 +107,9 @@ Some useful built-in HOFs and related functions:
 
 ;; `filter`
 (define (filter p lst)
-  (cond [(empty? lst) '()]
-        [(p (first lst)) (cons (first lst) (filter p (rest lst)))]
-        [else (filter p (rest lst))]))
+  (cond [(empty? lst) '()] ;if lst is empty just return the empty lst
+        [(p (first lst)) (cons (first lst) (filter p (rest lst)))] ;apply test on first element if true cons first element and recurse true the rest 
+        [else (filter p (rest lst))])) ;if false then just recurse thru the rest
 
 
 (values 
